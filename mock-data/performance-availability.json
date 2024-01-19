@@ -1,0 +1,32 @@
+{  "statusCode": 200,
+"data": {
+  "priceCategories": [
+      {
+          "priceCategoryId": 78,
+          "priceCategoryCode": 1,
+          "priceCategoryName": "VIP",
+          "availability": {
+              "soldOut": false,
+              "statusCode": "Ok"
+          }
+      },
+      {
+          "priceCategoryId": 79,
+          "priceCategoryCode": 2,
+          "priceCategoryName": "GOLD",
+          "availability": {
+              "soldOut": false,
+              "statusCode": "Ok"
+          }
+      },
+      {
+          "priceCategoryId": 82,
+          "priceCategoryCode": 3,
+          "priceCategoryName": "SILVER",
+          "availability": {
+              "soldOut": false,
+              "statusCode": "Ok"
+          }
+      }
+  ]
+}}

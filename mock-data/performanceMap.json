@@ -1,0 +1,275 @@
+{
+"statusCode": 200,
+"data":  {
+    "productId": 34,
+  "performanceCode": "PDUB01DEC2023B",
+  "name": "Batch 3 API upgrade",
+  "startDate": "2023-12-01T19:30:00",
+  "endDate": "2028-12-01T23:00:00",
+  "webSaleStartDate": "2023-12-01T19:30:00",
+  "webSaleEndDate": "2028-12-01T23:00:00",
+  "showCode": "SBAT23C",
+  "venueCode": "DUBAI WORLD TRADE CENTRE L.L.C[DED-229599],DUBAI WORLD TRADE CENTRE L.L.C[DED-229599]",
+  "priceCategories": [
+      {
+          "id": 79,
+          "code": "2",
+          "name": "GOLD",
+          "maxQtyPerTransaction": 0
+      },
+      {
+          "id": 82,
+          "code": "3",
+          "name": "SILVER",
+          "maxQtyPerTransaction": 0
+      },
+      {
+          "id": 78,
+          "code": "1",
+          "name": "VIP",
+          "maxQtyPerTransaction": 0
+      }
+  ],
+  "sections": [
+      {
+          "id": 165,
+          "code": "SGOLDA",
+          "name": "GOLDA",
+          "categoryId": 79,
+          "capacity": 4000,
+          "comps": 0,
+          "holds": 0,
+          "isGA": true
+      },
+      {
+          "id": 166,
+          "code": "SGOLDB",
+          "name": "GOLDB",
+          "categoryId": 79,
+          "capacity": 4000,
+          "comps": 0,
+          "holds": 0,
+          "isGA": true
+      },
+      {
+          "id": 167,
+          "code": "SGOLDC",
+          "name": "GOLDC",
+          "categoryId": 79,
+          "capacity": 4000,
+          "comps": 0,
+          "holds": 0,
+          "isGA": true
+      },
+      {
+          "id": 173,
+          "code": "SSILVER1",
+          "name": "SILVER1",
+          "categoryId": 82,
+          "capacity": 4000,
+          "comps": 0,
+          "holds": 0,
+          "isGA": false
+      },
+      {
+          "id": 175,
+          "code": "SSILVER2",
+          "name": "SILVER2",
+          "categoryId": 82,
+          "capacity": 2000,
+          "comps": 0,
+          "holds": 0,
+          "isGA": false
+      },
+      {
+          "id": 177,
+          "code": "SSILVER3",
+          "name": "SILVER3",
+          "categoryId": 82,
+          "capacity": 2000,
+          "comps": 0,
+          "holds": 0,
+          "isGA": false
+      },
+      {
+          "id": 163,
+          "code": "SVIP1",
+          "name": "VIP 1",
+          "categoryId": 78,
+          "capacity": 8000,
+          "comps": 0,
+          "holds": 0,
+          "isGA": true
+      },
+      {
+          "id": 164,
+          "code": "SVIP2",
+          "name": "VIP2",
+          "categoryId": 78,
+          "capacity": 60000,
+          "comps": 0,
+          "holds": 0,
+          "isGA": true
+      }
+  ],
+  "priceTypes": [
+      {
+          "id": 152,
+          "code": "D",
+          "name": "Adult",
+          "description": "",
+          "admitCount": 1,
+          "concessionCount": 0,
+          "comp": 0,
+          "hold": 0,
+          "offerCode": null,
+          "state": "Available",
+          "isPackage": 0
+      },
+      {
+          "id": 154,
+          "code": "E",
+          "name": "Adult",
+          "description": "",
+          "admitCount": 1,
+          "concessionCount": 0,
+          "comp": 0,
+          "hold": 0,
+          "offerCode": null,
+          "state": "Available",
+          "isPackage": 0
+      },
+      {
+          "id": 164,
+          "code": "A",
+          "name": "VIP Adult ",
+          "description": "",
+          "admitCount": 1,
+          "concessionCount": 0,
+          "comp": 0,
+          "hold": 0,
+          "offerCode": null,
+          "state": "Available",
+          "isPackage": 0
+      },
+      {
+          "id": 166,
+          "code": "B",
+          "name": "VIP 10% OFF ",
+          "description": "",
+          "admitCount": 1,
+          "concessionCount": 0,
+          "comp": 0,
+          "hold": 0,
+          "offerCode": null,
+          "state": "Available",
+          "isPackage": 0
+      },
+      {
+          "id": 168,
+          "code": "C",
+          "name": "Comps",
+          "description": "",
+          "admitCount": 1,
+          "concessionCount": 0,
+          "comp": 0,
+          "hold": 0,
+          "offerCode": null,
+          "state": "Available",
+          "isPackage": 0
+      }
+  ],
+  "ticketPrices": [
+      {
+          "id": 152,
+          "priceTag": "",
+          "indexNumber": 0,
+          "sheetId": 0,
+          "sheetName": "",
+          "categoryId": 79,
+          "categoryCode": 2,
+          "typeId": 152,
+          "typeCode": "D",
+          "feeId": "0",
+          "feeCode": "",
+          "faceValue": 0,
+          "price": 35000,
+          "faceValueGst": 0,
+          "gst": 0,
+          "gstRate": 0
+      },
+      {
+          "id": 154,
+          "priceTag": "",
+          "indexNumber": 0,
+          "sheetId": 0,
+          "sheetName": "",
+          "categoryId": 82,
+          "categoryCode": 3,
+          "typeId": 154,
+          "typeCode": "E",
+          "feeId": "0",
+          "feeCode": "",
+          "faceValue": 0,
+          "price": 25000,
+          "faceValueGst": 0,
+          "gst": 0,
+          "gstRate": 0
+      },
+      {
+          "id": 164,
+          "priceTag": "",
+          "indexNumber": 0,
+          "sheetId": 0,
+          "sheetName": "",
+          "categoryId": 78,
+          "categoryCode": 1,
+          "typeId": 164,
+          "typeCode": "A",
+          "feeId": "0",
+          "feeCode": "",
+          "faceValue": 0,
+          "price": 50000,
+          "faceValueGst": 0,
+          "gst": 0,
+          "gstRate": 0
+      },
+      {
+          "id": 166,
+          "priceTag": "",
+          "indexNumber": 0,
+          "sheetId": 0,
+          "sheetName": "",
+          "categoryId": 78,
+          "categoryCode": 1,
+          "typeId": 166,
+          "typeCode": "B",
+          "feeId": "0",
+          "feeCode": "",
+          "faceValue": 0,
+          "price": 45000,
+          "faceValueGst": 0,
+          "gst": 0,
+          "gstRate": 0
+      },
+      {
+          "id": 168,
+          "priceTag": "",
+          "indexNumber": 0,
+          "sheetId": 0,
+          "sheetName": "",
+          "categoryId": 78,
+          "categoryCode": 1,
+          "typeId": 168,
+          "typeCode": "C",
+          "feeId": "0",
+          "feeCode": "",
+          "faceValue": 0,
+          "price": 0,
+          "faceValueGst": 0,
+          "gst": 0,
+          "gstRate": 0
+      }
+  ]
+}
+}

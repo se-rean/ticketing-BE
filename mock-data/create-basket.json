@@ -1,0 +1,51 @@
+{
+  "id": "916904",
+  "offers": [
+      {
+          "id": 83085,
+          "dateTime": "2024-01-16T10:54:50.323",
+          "inventorySource": {
+              "name": "Sql",
+              "id": "83085"
+          },
+          "performanceCode": "PDUB01DEC2023B",
+          "priceCategoryId": 78,
+          "priceCategoryCode": 1,
+          "priceCategory": null,
+          "seller": "ASAEV1",
+          "channel": "API",
+          "demand": [
+              {
+                  "priceTypeId": 164,
+                  "priceTypeCode": "A",
+                  "priceType": null,
+                  "quantity": 1,
+                  "admits": 0,
+                  "offerCode": null,
+                  "qualifierCode": null,
+                  "entitlement": null,
+                  "prices": [
+                      {
+                          "id": null,
+                          "sheetId": 0,
+                          "net": 50000,
+                          "fees": [
+                              null
+                          ]
+                      }
+                  ]
+              }
+          ],
+          "seats": [
+              null
+          ],
+          "fees": [
+              null
+          ]
+      }
+  ],
+  "fees": [
+      null
+  ],
+  "expiry": "01/16/2024 11:14:50"
+}
