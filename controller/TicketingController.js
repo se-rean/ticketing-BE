@@ -36,6 +36,31 @@ TicketingController.getPerformanceMap = async (req, res) => {
   }
 }
 
+TicketingController.getParticipants = async (req, res) => {
+
+  const performanceCode = req.params.PCODE
+
+  try {
+    
+    const participants = await ParticipantsModel.findAll({where: { performance_code: performanceCode }, raw: true})
+    if (!participants) throw new Error("Error: "+ JSON.stringify(result))
+
+    res.send(dataToSnakeCase(apiResponse({
+      statusCode: 200,
+      message: "sucessful",
+      data: participants
+    })));
+
+  } catch (error) {
+    res.send(dataToSnakeCase(apiResponse({
+      statusCode: 200,
+      message: "error",
+      isSuccess: false,
+      errors: error.message
+    })));
+  }
+}
+
 TicketingController.createParticipants = async (req, res) => {
   const { participants } = req.body
 
@@ -63,19 +88,24 @@ TicketingController.createParticipants = async (req, res) => {
 }
 
 TicketingController.createBarcode = async (req, res) => {
-  const { customer } = req.body
+  const { 
+    participants
+   } = req.body
 
   try {
- 
-    if (!participants) throw new Error("Participants Required")
-
-  
-    const createCustomer = await DTCMService.createBarcode(customer);
+    const result = participants.map(async (p) => {
+      await DTCMService.createBarcode({
+        participants_code: p.participants_code,
+        amount: p.amount,
+        basketId: p.basket_id,
+        id: p.id
+      });
+    })
   
     res.send(dataToSnakeCase(apiResponse({
       statusCode: 200,
       message: "sucessful",
-      data: createCustomer
+      data: result
     })));
 
   } catch (error) {
