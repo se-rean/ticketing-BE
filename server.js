@@ -1,5 +1,6 @@
 
 require("dotenv").config();
+const {apiResponse} = require('./api-helpers/ResponseController')
 const express = require("express");
 const bodyParser = require("body-parser");
 const app = express();
@@ -10,8 +11,8 @@ const logger = require("./api-helpers/logger");
 const DTCMService = require("./services/DTCM");
 const { getAccessToken } = require("./init/DTCMAccessToken");
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json({ limit: '20mb' }));
+app.use(bodyParser.urlencoded({ extended: true, limit: '20mb' }));
 app.use(express.json());
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));

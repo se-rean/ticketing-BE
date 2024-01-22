@@ -19,7 +19,6 @@ async function getAccessToken() {
 
   const accessToken = response.data.access_token;
   tokenCache.set(TOKEN_KEY, accessToken, TOKEN_REFRESH_INTERVAL);
-  console.log(tokenCache.get('access_token'))
   return accessToken;
 }
 
@@ -32,20 +31,18 @@ async function refreshAccessToken() {
 setInterval(refreshAccessToken, TOKEN_REFRESH_INTERVAL * 1000);
 
 async function getToken() {
-  console.log('get token',tokenCache.get(TOKEN_KEY))
-  const response = await axios.post(token_url, {
-    "client_id": "ASAEV1",
-    "client_secret": "XOG0O6l_Kmi3xMp7QXepG67Ecm3VU6TNgim3IcD_",
-    "scope": "profile",
-    "grant_type": "client_credentials",
-    "resource": "https://et-apiuat.detsandbox.com"
-  });
+  // const response = await axios.post(token_url, {
+  //   "client_id": "ASAEV1",
+  //   "client_secret": "XOG0O6l_Kmi3xMp7QXepG67Ecm3VU6TNgim3IcD_",
+  //   "scope": "profile",
+  //   "grant_type": "client_credentials",
+  //   "resource": "https://et-apiuat.detsandbox.com"
+  // });
 
-  const accessToken = response.data.access_token;
-  tokenCache.set(TOKEN_KEY, accessToken, TOKEN_REFRESH_INTERVAL);
-  // console.log(tokenCache.get('access_token'))
-  return accessToken;
-  // return tokenCache.get(TOKEN_KEY);
+  // const accessToken = response.data.access_token;
+  // tokenCache.set(TOKEN_KEY, accessToken, TOKEN_REFRESH_INTERVAL);
+  // return accessToken;
+  return tokenCache.get(TOKEN_KEY);
 }
 
 module.exports = {

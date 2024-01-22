@@ -40,7 +40,6 @@ UserController.getById = async (req, res) => {
         raw: true,
         attributes: { exclude: ["password"] },
     });
-    console.log(User)
     if(!User.length) throw new Error('User not found')
     
     res.send(dataToSnakeCase(apiResponse({

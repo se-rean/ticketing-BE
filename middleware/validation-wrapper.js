@@ -9,7 +9,7 @@ const validationWrapper = (validations) => {
       return next()
     }
 
-    throw new Error('Validation error')
+    return res.send(errors)
   }
 }
 
