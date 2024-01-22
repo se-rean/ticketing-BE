@@ -129,12 +129,12 @@ TicketingController.createParticipants = async (req, res) => {
 
   try {
  
-    const createCustomer = await DTCMService.createCustomer(participants);
-  
+    const result = await ParticipantsModel.bulkCreate(participants)
+    
     res.send(dataToSnakeCase(apiResponse({
       statusCode: 200,
       message: "sucessful",
-      data: createCustomer
+      data: result
     })));
 
   } catch (error) {
@@ -148,29 +148,21 @@ TicketingController.createParticipants = async (req, res) => {
 }
 
 TicketingController.createBarcode = async (req, res) => {
-  const { 
-    participants
-   } = req.body
+  const { participantsIds, performanceCode, limit } = req.body
 
   try {
-    const result = participants.map(async (p) => {
-      await DTCMService.createBarcode({
-        participants_code: p.participants_code,
-        amount: p.amount,
-        basketId: p.basket_id,
-        id: p.id
-      });
-    })
+ 
+    const createCustomer = await DTCMService.createCustomer(participantsIds, performanceCode, limit);
   
     res.send(dataToSnakeCase(apiResponse({
       statusCode: 200,
       message: "sucessful",
-      data: result
+      data: createCustomer
     })));
 
   } catch (error) {
     res.send(dataToSnakeCase(apiResponse({
-      statusCode: 200,
+      statusCode: 402,
       message: "error",
       isSuccess: false,
       errors: error.message

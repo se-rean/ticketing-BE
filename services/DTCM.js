@@ -1,7 +1,8 @@
 const DTCMService = {};
-const { ParticipantsModel } = require('../init/mysql-init');
+const { ParticipantsModel, sequelize } = require('../init/mysql-init');
 const { getToken } = require('../init/DTCMAccessToken');
 const logger = require('../api-helpers/logger');
+const { Sequelize } = require('sequelize');
 
 const API_URL = 'https://et-apiuat.detsandbox.com';
 const API_KEY = '3rcbhsn32xmwvu42bmk2pkak';
@@ -22,17 +23,19 @@ const fetchWithHeaders = async (url, options = {}) => {
     const responseData = {
       status: response.status,
       ok: response.ok,
+      // apiResponse: JSON.stringify(await response.json())
     };
 
     if (response.ok) {
       responseData.data = await response.json();
     } else {
-      responseData.error = new Error(`Request failed with status ${response.status}: ${response.statusText}`);
+      responseData.apiResponse = new Error(`Request failed with status ${response.status}: ${JSON.stringify(await response.json())}`);
     }
 
     return responseData;
   } catch (error) {
     logger.info(error)
+    return error
   }
 };
 
@@ -121,16 +124,48 @@ async function craeteBasket(participant) {
   return fetchWithHeaders('baskets', options);
 }
 
-DTCMService.createCustomer = async (participants) => {
+DTCMService.createCustomer = async (participantsIds = [], performanceCode = "", limit=100) => {
   try {
-    const result = await ParticipantsModel.bulkCreate(participants, { raw: true });
+    console.log(performanceCode)
+    const result = await ParticipantsModel.findAll({
+      where: {
+        [Sequelize.Op.and]: [
+          {
+            [Sequelize.Op.or]: [
+              {
+                id: {
+                  [Sequelize.Op.in]: participantsIds,
+                },
+              },
+              {
+                performance_code: performanceCode,
+              },
+            ],
+          },
+          {
+            barcode: null,
+          },
+        ],
+      },
+      raw: true,
+      limit: limit,
+    });
+    console.log(result)
+    if (result.length < 1) throw new Error("Participants not exists")
     // const data = []
     const data = await Promise.all(result.map(async (r, i) => {
-      result[i] = result[i].dataValues;
+      // result[i] = result[i];
+      console.log("rbaster", r.basketId) 
+       
       const customer = await customerApi(r);
+      console.log("customer",customer)
       result[i].participantsCode = customer?.data?.id
+    
       const basket = await craeteBasket(result[i]);
-      result[i].basketId = basket?.data?.id
+        console.log("basket",basket)
+        result[i].basketId = basket?.data?.id
+    
+     
       
       const orderPayload = {
         participants_code: customer?.data?.id,
@@ -140,9 +175,11 @@ DTCMService.createCustomer = async (participants) => {
       
       const order = await purchaseBasket(orderPayload)
       const orderDetail = await orderDetails(order?.data?.orderId); 
+      console.log("order", order)
+      console.log("orderDetail", orderDetail)
       const BC = orderDetail?.data?.orderLines[0]?.orderLineItems[0]?.barcode;
       result[i].barcode = BC
-      await ParticipantsModel.update({ participantsCode: customer?.data?.id, basketId: basket?.data?.id, barcode: BC }, { where: { id: r.id } });
+      await ParticipantsModel.update({ participantsCode: customer?.data?.id, basketId: basket?.data?.id, barcode: BC, generate_barcode_api_respose:  JSON.stringify(orderDetail.apiResponse)  }, { where: { id: r.id } });
       return result[i]
     }));
 
