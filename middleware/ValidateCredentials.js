@@ -17,7 +17,7 @@ const AuthenticateToken = (req, res, next) => {
     jwt.verify(token, process.env.ACCESS_SECRET, (err, user) => {
       if (err) {
         if (err.name === "TokenExpiredError") {
-          throw new Error("Token expired please re-login");
+          throw new Error("Token expired please re-login ");
         } else {
           throw new Error("Forbidden1");
         }
