@@ -10,7 +10,7 @@ TicketingRouter.get("/performance-map/:PCODE", TicketingController.getEventDetai
 TicketingRouter.post("/create-participants/", ticketingValidation.createParticipants, TicketingController.createParticipants);
 
 TicketingRouter.get("/participants/:PCODE", TicketingController.getParticipants);
-TicketingRouter.post("/create-barcode/", TicketingController.createBarcode);
+TicketingRouter.post("/create-barcode/", ticketingValidation.createBarcode, TicketingController.createBarcode);
 
 
 module.exports = TicketingRouter;
