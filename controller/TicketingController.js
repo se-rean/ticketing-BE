@@ -112,7 +112,7 @@ TicketingController.getParticipants = async (req, res) => {
       queryPaginate(
         {
           where: { performance_code: performanceCode },
-          order: [["id", "DESC"]],
+          order: [["barcode", "ASC"]],
           raw: true,
         },
         { page: page || 1, page_size: page_size || 10 }
