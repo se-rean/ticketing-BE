@@ -29,7 +29,7 @@ const fetchWithHeaders = async (url, options = {}) => {
     if (response.ok) {
       responseData.data = await response.json();
     } else {
-      responseData.apiResponse = new Error(`Request failed with status ${response.status}: ${JSON.stringify(await response.json())}`);
+      responseData.apiResponse = JSON.stringify(await response.json());
     }
 
     return responseData;
@@ -179,7 +179,7 @@ DTCMService.createCustomer = async (participantsIds = [], performanceCode = "", 
       console.log("orderDetail", orderDetail)
       const BC = orderDetail?.data?.orderLines[0]?.orderLineItems[0]?.barcode;
       result[i].barcode = BC
-      await ParticipantsModel.update({ participantsCode: customer?.data?.id, basketId: basket?.data?.id, barcode: BC, generate_barcode_api_respose:  JSON.stringify(orderDetail.apiResponse)  }, { where: { id: r.id } });
+      await ParticipantsModel.update({ participantsCode: customer?.data?.id, basketId: basket?.data?.id, barcode: BC, generate_barcode_api_respose:  JSON.stringify(orderDetail)+ " | "+ JSON.stringify(order)  }, { where: { id: r.id } });
       return result[i]
     }));
 

@@ -11,6 +11,6 @@ TicketingRouter.post("/create-participants/", ticketingValidation.createParticip
 
 TicketingRouter.get("/participants/:PCODE", TicketingController.getParticipants);
 TicketingRouter.post("/create-barcode/", ticketingValidation.createBarcode, TicketingController.createBarcode);
-
+TicketingRouter.post("/create-random-participants/:PCODE", TicketingController.createRandomParticipants)
 
 module.exports = TicketingRouter;
