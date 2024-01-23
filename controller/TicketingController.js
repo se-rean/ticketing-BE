@@ -5,6 +5,7 @@ const DTCMService = require("../services/DTCM");
 const { apiResponse } = require("../api-helpers/ResponseController");
 const dataToSnakeCase = require("../api-helpers/data_to_snake_case");
 const ParticipantsModel = require("../model/ParticipantsModel");
+const queryPaginate = require("../api-helpers/query-paginate");
 
 const TicketingController = {};
 
@@ -103,9 +104,20 @@ TicketingController.getParticipants = async (req, res) => {
 
   const performanceCode = req.params.PCODE
 
+  const { page, page_size } = req.query;
+
   try {
     
-    const participants = await ParticipantsModel.findAll({where: { performance_code: performanceCode }, raw: true})
+    const participants = await ParticipantsModel.findAll(
+      queryPaginate(
+        {
+          where: { performance_code: performanceCode },
+          order: [["id", "DESC"]],
+          raw: true,
+        },
+        { page: page || 1, page_size: page_size || 10 }
+      )
+    )
     if (!participants) throw new Error("Error: "+ JSON.stringify(result))
 
     res.send(dataToSnakeCase(apiResponse({
