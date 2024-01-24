@@ -151,7 +151,7 @@ DTCMService.createCustomer = async (participantsIds = [], performanceCode = "", 
       limit: limit,
     });
     console.log(result)
-    if (result.length < 1) throw new Error("Participants not exists")
+    if (result.length < 1) throw new Error("All Participant already have barcode")
     // const data = []
     const data = await Promise.all(result.map(async (r, i) => {
       // result[i] = result[i];
@@ -179,7 +179,7 @@ DTCMService.createCustomer = async (participantsIds = [], performanceCode = "", 
       console.log("orderDetail", orderDetail)
       const BC = orderDetail?.data?.orderLines[0]?.orderLineItems[0]?.barcode;
       result[i].barcode = BC
-      await ParticipantsModel.update({ participantsCode: customer?.data?.id, basketId: basket?.data?.id, barcode: BC, generate_barcode_api_respose:  JSON.stringify(orderDetail)+ " | "+ JSON.stringify(order)  }, { where: { id: r.id } });
+      await ParticipantsModel.update({ participantsCode: customer?.data?.id, basketId: basket?.data?.id, barcode: BC, generate_barcode_api_respose:  "CREATE CUSTOMER: "+ JSON.stringify(customer)+ " | CREATE BASKET:"+ JSON.stringify(basket) + " | ORDER BASKET: " + JSON.stringify(order) + " | GET ORDER DETAILS: " + JSON.stringify(orderDetail) }, { where: { id: r.id } });
       return result[i]
     }));
 

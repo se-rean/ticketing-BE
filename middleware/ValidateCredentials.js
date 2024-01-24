@@ -27,11 +27,11 @@ const AuthenticateToken = (req, res, next) => {
       next();
     });
   } catch (error) {
-    res.send(
+    res.status(403).send(
       dataToSnakeCase(
         apiResponse({
           isSuccess: false,
-          statusCode: 402,
+          statusCode: 403,
           message: error.message,
           error: error,
         })

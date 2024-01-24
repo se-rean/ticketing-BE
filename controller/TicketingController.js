@@ -166,6 +166,9 @@ TicketingController.createRandomParticipants = async (req, res) => {
   const { category } = req.body
   try {
 
+  const eventExists = await EventModel.findAll({ where: {performanceCode}, raw: true })
+  if(eventExists.length < 1) throw new Error("Event Not exists")
+
   let data = []
   const payload = category.map(c => {
     console.log(c.count)
@@ -219,12 +222,14 @@ TicketingController.createRandomParticipants = async (req, res) => {
 }
 
 TicketingController.createBarcode = async (req, res) => {
-  const { participantsIds, performanceCode, limit } = req.body
+  const { participantsIds, performanceCode, limit, retry = 1 } = req.body
 
   try {
- 
-    const createCustomer = await DTCMService.createCustomer(participantsIds, performanceCode, limit);
-  
+    let createCustomer = {}
+    for(let x = 0; x < retry; x++) {
+      createCustomer = await DTCMService.createCustomer(participantsIds, performanceCode, limit);
+    }
+   
     res.send(dataToSnakeCase(apiResponse({
       statusCode: 200,
       message: "sucessful",

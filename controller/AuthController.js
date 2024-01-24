@@ -8,7 +8,7 @@ const crypto = require('crypto');
 
 const generateAccessToken = (user) => {
   return jwt.sign({ user }, process.env.ACCESS_SECRET, {
-    expiresIn: "7d",
+    expiresIn: "1h",
   });
 };
 
