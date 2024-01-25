@@ -26,7 +26,7 @@ class ParticipantsModel extends Sequelize.Model {
         status: DataTypes.STRING(255),
         participantsCode: DataTypes.STRING(255),
         basketId: DataTypes.STRING(255),
-        generate_barcode_api_respose: DataTypes.STRING(500),
+        generate_barcode_api_respose: DataTypes.TEXT,
         amount: DataTypes.STRING(500),
         orderId: DataTypes.STRING(255),
         totalAmount: DataTypes.STRING(255),

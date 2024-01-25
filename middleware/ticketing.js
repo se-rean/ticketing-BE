@@ -18,4 +18,10 @@ ticketingValidation.createEvent = validationWrapper([
   body('description').exists().withMessage(VALIDATION_MESSAGE.REQUIRED),
 ])
 
+ticketingValidation.createBarcode = validationWrapper([
+  body('participantsIds').exists().withMessage(VALIDATION_MESSAGE.REQUIRED),
+  body('performanceCode').exists().withMessage(VALIDATION_MESSAGE.REQUIRED),
+  body('limit').exists().withMessage(VALIDATION_MESSAGE.REQUIRED),
+])
+
 module.exports = ticketingValidation

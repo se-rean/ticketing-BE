@@ -17,7 +17,7 @@ const AuthenticateToken = (req, res, next) => {
     jwt.verify(token, process.env.ACCESS_SECRET, (err, user) => {
       if (err) {
         if (err.name === "TokenExpiredError") {
-          throw new Error("Token expired please re-login ");
+          throw new Error("Token expired please re-login");
         } else {
           throw new Error("Forbidden1");
         }
@@ -27,11 +27,11 @@ const AuthenticateToken = (req, res, next) => {
       next();
     });
   } catch (error) {
-    res.send(
+    res.status(403).send(
       dataToSnakeCase(
         apiResponse({
           isSuccess: false,
-          statusCode: 402,
+          statusCode: 403,
           message: error.message,
           error: error,
         })
