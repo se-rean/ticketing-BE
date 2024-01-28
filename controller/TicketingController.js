@@ -6,7 +6,7 @@ const { apiResponse } = require("../api-helpers/ResponseController");
 const dataToSnakeCase = require("../api-helpers/data_to_snake_case");
 const ParticipantsModel = require("../model/ParticipantsModel");
 const queryPaginate = require("../api-helpers/query-paginate");
-const { faker } = require('@faker-js/faker');
+const { faker, fa } = require('@faker-js/faker');
 
 const TicketingController = {};
 
@@ -148,6 +148,69 @@ TicketingController.createParticipants = async (req, res) => {
       statusCode: 200,
       message: "sucessful",
       data: result
+    })));
+
+  } catch (error) {
+    res.send(dataToSnakeCase(apiResponse({
+      statusCode: 402,
+      message: "error",
+      isSuccess: false,
+      errors: error.message
+    })));
+  }
+}
+
+TicketingController.editParticipants = async (req, res) => {
+  const query = req.body
+  const { id } = req.query
+  console.log(id)
+  try {
+ 
+    const result = await ParticipantsModel.update(query, {
+      where: {
+        id,
+        barcode: null
+      },
+      raw: true
+    })
+    
+    res.send(dataToSnakeCase(apiResponse({
+      statusCode: 200,
+      message: "sucessful",
+      data: {
+        updated: result
+      }
+    })));
+
+  } catch (error) {
+    res.send(dataToSnakeCase(apiResponse({
+      statusCode: 402,
+      message: "error",
+      isSuccess: false,
+      errors: error.message
+    })));
+  }
+}
+
+TicketingController.deleteParticipants = async (req, res) => {
+  const query = req.body
+  const { id } = req.query
+
+  try {
+ 
+    const result = await ParticipantsModel.destroy({
+      where: {
+        id,
+        barcode: null
+      }
+    })
+
+    res.send(dataToSnakeCase(apiResponse({
+      statusCode: 200,
+      message: "sucessful",
+      data: {
+        deleted: result
+      }
     })));
 
   } catch (error) {
