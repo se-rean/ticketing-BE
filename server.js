@@ -8,7 +8,7 @@ const rTracer = require("cls-rtracer");
 const cors = require("cors");
 const router = require("./router/index");
 const logger = require("./api-helpers/logger");
-const DTCMService = require("./services/DTCM");
+
 const { getAccessToken } = require("./init/DTCMAccessToken");
 
 app.use(bodyParser.json({ limit: '20mb' }));

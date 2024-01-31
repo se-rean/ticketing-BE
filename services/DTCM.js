@@ -4,8 +4,8 @@ const { getToken } = require('../init/DTCMAccessToken');
 const logger = require('../api-helpers/logger');
 const { Sequelize } = require('sequelize');
 
-const API_URL = 'https://et-apiuat.detsandbox.com';
-const API_KEY = '3rcbhsn32xmwvu42bmk2pkak';
+const API_URL = process.env.ENV == "development" ? process.env.DEV_API_URL : process.env.PROD_API_URL;
+const API_KEY = process.env.ENV == "development" ? process.env.DEV_API_KEY : process.env.PROD_API_KEY;
 
 const createHeaders = async () => {
   const headers = new Headers();
@@ -19,7 +19,7 @@ const fetchWithHeaders = async (url, options = {}) => {
   options.headers = headers;
   try {
     const response = await fetch(`${API_URL}/${url}?api_key=${API_KEY}`, options);
-
+    console.log(response)
     const responseData = {
       status: response.status,
       ok: response.ok,
@@ -152,7 +152,7 @@ DTCMService.createCustomer = async (participantsIds = [], performanceCode = "", 
       limit: limit,
     });
     console.log(result)
-    if (result.length < 1) throw new Error("All Participant already have barcode")
+    if (result.length < 1) return "All Participant already have barcode"
     // const data = []
     const data = await Promise.all(result.map(async (r, i) => {
       // result[i] = result[i];
