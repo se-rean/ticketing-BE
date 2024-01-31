@@ -124,7 +124,8 @@ TicketingController.getParticipants = async (req, res) => {
     res.send(dataToSnakeCase(apiResponse({
       statusCode: 200,
       message: "sucessful",
-      data: participants
+      count: participants.length,
+      data: participants,
     })));
 
   } catch (error) {
