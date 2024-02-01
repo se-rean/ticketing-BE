@@ -9,6 +9,11 @@ const queryPaginate = require("../api-helpers/query-paginate");
 const { faker, fa } = require('@faker-js/faker');
 
 const TicketingController = {};
+const eventStatus = {
+  1: 'Pending For Barcode Generation',
+  2: 'Completed',
+  3: 'Cancelled'
+}
 
 TicketingController.createEvent = async (req, res) => {
   
@@ -26,7 +31,8 @@ TicketingController.createEvent = async (req, res) => {
     const event = await EventModel.create({
       performanceCode,
       title,
-      description
+      description,
+      status: eventStatus[1]
     }, {raw: true})
 
     if (!event) throw new Error("Error encounter on create event")
@@ -48,21 +54,58 @@ TicketingController.createEvent = async (req, res) => {
 }
 
 TicketingController.getEventDetails = async (req, res) => {
-  const performanceCode = req.params.PCODE
-  
+  const performanceCode = req.query.PCODE
+
   try {
 
-    const eventExists = await EventModel.findAll({ where: {performanceCode}, raw: true })
+    let query = {}
+
+    if (performanceCode) {
+      query = { where: { performanceCode }}
+    }
+    console.log(query)
+    const eventExists = await EventModel.findAll({...query, raw: true })
     if(eventExists.length < 1) throw new Error("Event Not exists")
 
-    const eventDetails = await DTCMService.getEventDetails(performanceCode)
- 
-    if (!eventDetails) throw new Error("Error encounter on create event")
-    
     res.send(dataToSnakeCase(apiResponse({
       statusCode: 200,
       message: "sucessful",
-      data: eventDetails.data
+      data: eventExists
+    })));
+
+  } catch (error) {
+    res.send(dataToSnakeCase(apiResponse({
+      statusCode: 200,
+      message: "error",
+      isSuccess: false,
+      errors: error.message
+    })));
+  }
+}
+
+TicketingController.updateEventDetails = async (req, res) => {
+  const PCODE = req.query.PCODE
+  const { title, status, description } = req.body
+  try { 
+    console.log(PCODE)
+
+    if (!PCODE) throw new Error('Performance Code required')
+
+    const eventExists = await EventModel.findAll({ where: {performanceCode: PCODE}, raw: true })
+    if(eventExists.length < 1) throw new Error("Event Not exists")
+
+    await EventModel.update({
+      title,
+      status: eventStatus[status],
+      description
+    }, { where: {performanceCode: PCODE} })
+
+    const eventData = await EventModel.findAll({ where: {performanceCode: PCODE}, raw: true })
+
+    res.send(dataToSnakeCase(apiResponse({
+      statusCode: 200,
+      message: "sucessful",
+      data: eventData
     })));
 
   } catch (error) {

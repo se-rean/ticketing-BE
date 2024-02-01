@@ -8,6 +8,7 @@ class EventModel extends Sequelize.Model {
       {
         performanceCode: DataTypes.STRING(255),
         title: DataTypes.STRING(255),
+        status: DataTypes.STRING(255),
         description: DataTypes.STRING(255)
       },
       {
