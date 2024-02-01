@@ -54,23 +54,21 @@ TicketingController.createEvent = async (req, res) => {
 }
 
 TicketingController.getEventDetails = async (req, res) => {
-  const performanceCode = req.query.PCODE
-
+  const performanceCode = req.params.PCODE
+  
   try {
 
-    let query = {}
-
-    if (performanceCode) {
-      query = { where: { performanceCode }}
-    }
-    console.log(query)
-    const eventExists = await EventModel.findAll({...query, raw: true })
+    const eventExists = await EventModel.findAll({ where: {performanceCode}, raw: true })
     if(eventExists.length < 1) throw new Error("Event Not exists")
 
+    const eventDetails = await DTCMService.getEventDetails(performanceCode)
+ 
+    if (!eventDetails) throw new Error("Error encounter on create event")
+    
     res.send(dataToSnakeCase(apiResponse({
       statusCode: 200,
       message: "sucessful",
-      data: eventExists
+      data: eventDetails.data
     })));
 
   } catch (error) {
