@@ -1,6 +1,6 @@
 
 
-const { TicketingModel, sequelize, EventModel } = require("../init/mysql-init");
+const { TicketingModel, sequelize, EventModel, EventPricingModel } = require("../init/mysql-init");
 const DTCMService = require("../services/DTCM");
 const { apiResponse } = require("../api-helpers/ResponseController");
 const dataToSnakeCase = require("../api-helpers/data_to_snake_case");
@@ -54,6 +54,71 @@ TicketingController.createEvent = async (req, res) => {
 }
 
 TicketingController.getEventDetails = async (req, res) => {
+  const performanceCode = req.params.PCODE
+  
+  try {
+
+    const eventExists = await EventModel.findAll({ where: {performanceCode}, raw: true })
+    if(eventExists.length < 1) throw new Error("Event Not exists")
+
+    const eventDetails = await DTCMService.getEventDetails(performanceCode)
+    if (!eventDetails) throw new Error("Error encounter on create event")
+    console.log(eventDetails)
+    console.log(eventDetails)
+    
+
+    let ep = []
+    if (eventDetails.data) {
+      await EventModel.update({
+        name,
+        startDate,
+        endDate,
+        webSaleStartDate,
+        webSaleEndDate,
+        showCode,
+        venueCode
+      } = eventDetails.data, { where: { performanceCode } })
+      
+      eventDetails.data.sections.forEach(s => {
+        eventDetails.data.ticketPrices.forEach(t => {
+          if (s.categoryId === t.categoryId && t.price !== 0) {
+            ep.push({
+              performanceCode,
+              section: s.code,
+              capacity: s.capacity,
+              typeCode: t.typeCode,
+              amount: t.price,
+              state: eventDetails.data.priceTypes.find(p => p.code === t.typeCode).state
+              })
+          } 
+        })
+        })
+  
+        await EventPricingModel.destroy({where: { performanceCode }})
+        await EventPricingModel.bulkCreate(ep)
+    }
+ 
+    const eventDetail = await EventModel.findAll({ where: {performanceCode}, raw: true })
+    const eventPricing = await EventPricingModel.findAll({ where: { performanceCode }, raw: true })
+
+    res.send(dataToSnakeCase(apiResponse({
+      statusCode: 200,
+      message: "sucessful",
+      data: { ...eventDetail[0], eventPricing }
+    })));
+
+  } catch (error) {
+    console.log(error)
+    res.send(dataToSnakeCase(apiResponse({
+      statusCode: 200,
+      message: "error",
+      isSuccess: false,
+      errors: error.message
+    })));
+  }
+}
+
+TicketingController.getEventDetails1 = async (req, res) => {
   const performanceCode = req.params.PCODE
   
   try {

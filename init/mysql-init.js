@@ -6,6 +6,8 @@ const UserModel = require("../model/UserModel");
 const logger = require('../api-helpers/logger');
 const ParticipantsModel = require("../model/ParticipantsModel");
 const EventModel = require("../model/EventModel");
+const EventPricingModel = require('../model/EventPricingModel');
+
 const DEFAULT_TIMEZONE = "+08:00";
 
 const sequelize = new Sequelize(
@@ -32,6 +34,7 @@ const models = {
   UserModel: UserModel.init(sequelize, Sequelize),
   ParticipantsModel: ParticipantsModel.init(sequelize, Sequelize),
   EventModel: EventModel.init(sequelize, Sequelize),
+  EventPricingModel: EventPricingModel.init(sequelize, Sequelize),
 };
 
 module.exports = {

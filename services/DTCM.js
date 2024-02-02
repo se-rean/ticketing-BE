@@ -41,7 +41,6 @@ const fetchWithHeaders = async (url, options = {}) => {
 
 DTCMService.getEventDetails = async (performanceCode) => {
   const res = await fetchWithHeaders(`performances/${performanceCode}/map`);
-  if (res.status !== 200) throw new Error(res.apiResponse)
   return res
 }
 
