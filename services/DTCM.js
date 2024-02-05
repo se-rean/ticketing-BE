@@ -156,14 +156,11 @@ DTCMService.createCustomer = async (participantsIds = [], performanceCode = "", 
 
     const data = await Promise.all(result.map(async (r, i) => {
       const customer = await customerApi(r);
-      console.log(customer)
       if (customer.status === 200) {  
-        console.log(customer)
         result[i].participantsCode = customer?.data?.id
        
         const basket = await craeteBasket(result[i]);
         if (basket.status === 200 ) {
-          console.log(basket) 
           result[i].basketId = basket?.data?.id
           const orderPayload = {
             participants_code: customer?.data?.id,
@@ -173,10 +170,8 @@ DTCMService.createCustomer = async (participantsIds = [], performanceCode = "", 
            
           const order = await purchaseBasket(orderPayload)
           if (order.status === 200) {
-            console.log(order) 
             const orderDetail = await orderDetails(order?.data?.orderId); 
             if (orderDetail.status == 200) {
-              console.log(orderDetail) 
               log = { message: "OK" }
               status = "sold"
               const BC = orderDetail?.data?.orderLines[0]?.orderLineItems[0]?.barcode;

@@ -63,8 +63,6 @@ TicketingController.getEventDetails = async (req, res) => {
 
     const eventDetails = await DTCMService.getEventDetails(performanceCode)
     if (!eventDetails) throw new Error("Error encounter on get event details")
-    console.log(eventDetails)
-    console.log(eventDetails)
     
 
     let ep = []
@@ -108,7 +106,6 @@ TicketingController.getEventDetails = async (req, res) => {
     })));
 
   } catch (error) {
-    console.log(error)
     res.send(dataToSnakeCase(apiResponse({
       statusCode: 200,
       message: "error",
@@ -132,7 +129,6 @@ TicketingController.getAllEvent = async (req, res) => {
     })));
 
   } catch (error) {
-    console.log(error)
     res.send(dataToSnakeCase(apiResponse({
       statusCode: 200,
       message: "error",
@@ -174,7 +170,6 @@ TicketingController.updateEventDetails = async (req, res) => {
   const PCODE = req.query.PCODE
   const { title, status, description } = req.body
   try { 
-    console.log(PCODE)
 
     if (!PCODE) throw new Error('Performance Code required')
 
@@ -294,7 +289,6 @@ TicketingController.createParticipants = async (req, res) => {
 TicketingController.editParticipants = async (req, res) => {
   const query = req.body
   const { id } = req.query
-  console.log(id)
   try {
  
     const result = await ParticipantsModel.update(query, {
@@ -365,7 +359,6 @@ TicketingController.createRandomParticipants = async (req, res) => {
 
   let data = []
   const payload = category.map(c => {
-    console.log(c.count)
    
     for(let x = 0; x < c.count; x++) {
       data.push({
