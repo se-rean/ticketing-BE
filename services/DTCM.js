@@ -19,7 +19,6 @@ const fetchWithHeaders = async (url, options = {}) => {
   options.headers = headers;
   try {
     const response = await fetch(`${API_URL}/${url}?api_key=${API_KEY}`, options);
-    console.log(response)
     const responseData = {
       status: response.status,
       ok: response.ok,
@@ -34,7 +33,6 @@ const fetchWithHeaders = async (url, options = {}) => {
 
     return responseData;
   } catch (error) {
-    logger.info(error)
     return error
   }
 };
@@ -124,8 +122,7 @@ async function craeteBasket(participant) {
 }
 
 DTCMService.createCustomer = async (participantsIds = [], performanceCode = "", limit=100) => {
-  try {
-    console.log(performanceCode)
+  try { 
     const result = await ParticipantsModel.findAll({
       where: {
         [Sequelize.Op.and]: [
@@ -142,44 +139,67 @@ DTCMService.createCustomer = async (participantsIds = [], performanceCode = "", 
             ],
           },
           {
-            barcode: null,
+            [Sequelize.Op.or]: [
+              {barcode: null},
+              {barcode: ""},
+            ]
           },
         ],
       },
       raw: true,
       limit: limit,
     });
-    console.log(result)
     if (result.length < 1) return "All Participant already have barcode"
     // const data = []
+
+    let participantsCode, basketId, barcode, log, status = "failed"
+
     const data = await Promise.all(result.map(async (r, i) => {
-      // result[i] = result[i];
-      console.log("rbaster", r.basketId) 
-       
       const customer = await customerApi(r);
-      console.log("customer",customer)
-      result[i].participantsCode = customer?.data?.id
-    
-      const basket = await craeteBasket(result[i]);
-        console.log("basket",basket)
-        result[i].basketId = basket?.data?.id
-    
-     
-      
-      const orderPayload = {
-        participants_code: customer?.data?.id,
-        totalAmount: r.totalAmount,
-        basket_id: basket?.data?.id
+      console.log(customer)
+      if (customer.status === 200) {  
+        console.log(customer)
+        result[i].participantsCode = customer?.data?.id
+        participantsCode = customer?.data?.id
+        const basket = await craeteBasket(result[i]);
+        if (basket.status === 200 ) {
+          console.log(basket) 
+          result[i].basketId = basket?.data?.id
+          basketId = basket?.data?.id
+          const orderPayload = {
+            participants_code: customer?.data?.id,
+            totalAmount: r.totalAmount,
+            basket_id: basket?.data?.id
+          }
+           
+          const order = await purchaseBasket(orderPayload)
+          if (order.status === 200) {
+            console.log(order) 
+            const orderDetail = await orderDetails(order?.data?.orderId); 
+            if (orderDetail.status == 200) {
+              console.log(orderDetail) 
+              log = { message: "OK" }
+              status = "sold"
+              const BC = orderDetail?.data?.orderLines[0]?.orderLineItems[0]?.barcode;
+              result[i].barcode = BC
+              barcode = BC
+
+            } else {
+              log = JSON.parse(orderDetail.apiResponse)
+            }
+          } else {
+            log = JSON.parse(order.apiResponse)
+          }
+        } else {
+          log = JSON.parse(basket.apiResponse)
+        }
+      } else {
+        log = JSON.parse(customer.apiResponse)
       }
-      
-      const order = await purchaseBasket(orderPayload)
-      const orderDetail = await orderDetails(order?.data?.orderId); 
-      console.log("order", order)
-      console.log("orderDetail", orderDetail)
-      const BC = orderDetail?.data?.orderLines[0]?.orderLineItems[0]?.barcode;
-      result[i].barcode = BC
-      await ParticipantsModel.update({ participantsCode: customer?.data?.id, basketId: basket?.data?.id, barcode: BC, generate_barcode_api_respose:  "CREATE CUSTOMER: "+ JSON.stringify(customer)+ " | CREATE BASKET:"+ JSON.stringify(basket) + " | ORDER BASKET: " + JSON.stringify(order) + " | GET ORDER DETAILS: " + JSON.stringify(orderDetail) }, { where: { id: r.id } });
+     
+      await ParticipantsModel.update({ status: status, participantsCode, basketId, barcode, generate_barcode_api_respose: log.message}, { where: { id: r.id } });
       return result[i]
+      
     }));
 
     return data

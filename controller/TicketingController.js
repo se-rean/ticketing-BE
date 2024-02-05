@@ -62,7 +62,7 @@ TicketingController.getEventDetails = async (req, res) => {
     if(eventExists.length < 1) throw new Error("Event Not exists")
 
     const eventDetails = await DTCMService.getEventDetails(performanceCode)
-    if (!eventDetails) throw new Error("Error encounter on create event")
+    if (!eventDetails) throw new Error("Error encounter on get event details")
     console.log(eventDetails)
     console.log(eventDetails)
     
