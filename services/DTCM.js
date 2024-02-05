@@ -26,7 +26,9 @@ const fetchWithHeaders = async (url, options = {}) => {
     };
 
     if (response.ok) {
-      responseData.data = await response.json();
+      if(response.status !== 204) {
+        responseData.data = await response.json();
+      }
     } else {
       responseData.apiResponse = JSON.stringify(await response.json());
     }
@@ -144,6 +146,12 @@ DTCMService.createCustomer = async (participantsIds = [], performanceCode = "", 
               {barcode: ""},
             ]
           },
+          {
+            [Sequelize.Op.or]: [
+              {status: null},
+              {status: ""},
+            ]
+          }
         ],
       },
       raw: true,
@@ -152,9 +160,10 @@ DTCMService.createCustomer = async (participantsIds = [], performanceCode = "", 
     if (result.length < 1) return "All Participant already have barcode"
     // const data = []
 
-    let log, status = "failed"
+    
 
     const data = await Promise.all(result.map(async (r, i) => {
+      let log, status = "failed"
       const customer = await customerApi(r);
       if (customer.status === 200) {  
         result[i].participantsCode = customer?.data?.id
@@ -177,7 +186,7 @@ DTCMService.createCustomer = async (participantsIds = [], performanceCode = "", 
               const BC = orderDetail?.data?.orderLines[0]?.orderLineItems[0]?.barcode;
               result[i].barcode = BC
               await EventPricingModel.increment({sold: 1},{ where: { section: result[i].area, performanceCode } })
-              await ParticipantsModel.update({ status: status, participantsCode: customer?.data?.id, basketId: basket?.data?.id, barcode: BC }, { where: { id: r.id } });
+              await ParticipantsModel.update({ status: status, participantsCode: customer?.data?.id, basketId: basket?.data?.id, barcode: BC, orderId: order?.data?.orderId }, { where: { id: r.id } });
             } else {
               log = JSON.parse(orderDetail.apiResponse)
             }
@@ -207,5 +216,21 @@ DTCMService.getPerformanceMap = async (performance) => {
   if (res.status !== 200) throw new Error(res.error.message)
   return res
 };
+
+DTCMService.refund = async (orderId, amount, seller, meansOfPayment = 'EXTERNAL') => {
+  const raw = JSON.stringify({
+    "Seller": seller,
+    "refunds": [
+      {
+          "Amount": amount,
+          "MeansOfPayment": meansOfPayment
+      }
+    ]
+  });
+
+  console.log(raw)
+  const options = { method: 'POST', body: raw, redirect: 'follow' };
+  return fetchWithHeaders(`orders/${orderId}/reverse`, options);
+}
 
 module.exports = DTCMService;

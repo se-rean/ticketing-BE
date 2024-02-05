@@ -7,6 +7,7 @@ const dataToSnakeCase = require("../api-helpers/data_to_snake_case");
 const ParticipantsModel = require("../model/ParticipantsModel");
 const queryPaginate = require("../api-helpers/query-paginate");
 const { faker, fa } = require('@faker-js/faker');
+const { Sequelize, where } = require("sequelize");
 
 const TicketingController = {};
 const eventStatus = {
@@ -41,6 +42,60 @@ TicketingController.createEvent = async (req, res) => {
       statusCode: 200,
       message: "sucessful",
       data: event.dataValues
+    })));
+
+  } catch (error) {
+    res.send(dataToSnakeCase(apiResponse({
+      statusCode: 200,
+      message: "error",
+      isSuccess: false,
+      errors: error.message
+    })));
+  }
+}
+
+TicketingController.createRefund = async (req, res) => {
+  const PCODE = req.query.PCODE
+  const { participants } = req.body
+  try {
+
+    if (!PCODE) throw new Error('Performance Code required')
+    if (!participants || participants.length < 1)  throw new Error('Participants id required')
+
+    const participantsData = await ParticipantsModel.findAll({ 
+      where: {
+        performance_code: PCODE, 
+        status: 'sold', 
+        [Sequelize.Op.not]: [
+          {barcode: null},
+          {barcode: ""},
+        ],
+        [Sequelize.Op.not]: [
+          {orderId: null},
+          {orderId: ""},
+        ],
+        id: { 
+          [Sequelize.Op.in]: 
+          participants
+        }
+      }, raw: true })
+    if(participantsData.length < 1) throw new Error("Participant/s Not exists")
+      console.log(participantsData)
+    const result = await Promise.all(participantsData.map(async p => {
+      const refunded = await DTCMService.refund(p.orderId, p.totalAmount, 'ABART11')
+      if (refunded.status === 204) {
+        ParticipantsModel.update({ status: 'refunded', generate_barcode_api_respose: 'refund successful' }, { where: {id: p.id} })
+      } else {
+        let log = JSON.parse(refunded.apiResponse)
+        ParticipantsModel.update({ generate_barcode_api_respose: 'Error on refund: '+log.message }, { where: {id: p.id} })
+      }
+    }))
+    
+
+    res.send(dataToSnakeCase(apiResponse({
+      statusCode: 200,
+      message: "sucessful",
+      data: participantsData
     })));
 
   } catch (error) {
