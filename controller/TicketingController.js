@@ -118,6 +118,30 @@ TicketingController.getEventDetails = async (req, res) => {
   }
 }
 
+TicketingController.getAllEvent = async (req, res) => {
+
+  try {
+
+    const events = await EventModel.findAll({raw: true })
+    if(events.length < 1) throw new Error("Event Not exists")
+ 
+    res.send(dataToSnakeCase(apiResponse({
+      statusCode: 200,
+      message: "sucessful",
+      data:  events 
+    })));
+
+  } catch (error) {
+    console.log(error)
+    res.send(dataToSnakeCase(apiResponse({
+      statusCode: 200,
+      message: "error",
+      isSuccess: false,
+      errors: error.message
+    })));
+  }
+}
+
 TicketingController.getEventDetails1 = async (req, res) => {
   const performanceCode = req.params.PCODE
   

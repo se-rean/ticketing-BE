@@ -7,6 +7,7 @@ const ticketingValidation = require("../middleware/ticketing");
 
 TicketingRouter.post("/create-event/", ticketingValidation.createEvent, TicketingController.createEvent);
 TicketingRouter.get("/event/", TicketingController.getEventDetails);
+TicketingRouter.get("/events/", TicketingController.getAllEvent);
 TicketingRouter.put("/update-event/", TicketingController.updateEventDetails);
 TicketingRouter.get("/performance-map/:PCODE", TicketingController.getEventDetails);
 TicketingRouter.post("/create-participants/", ticketingValidation.createParticipants, TicketingController.createParticipants);

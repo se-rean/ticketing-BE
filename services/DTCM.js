@@ -1,5 +1,5 @@
 const DTCMService = {};
-const { ParticipantsModel, sequelize } = require('../init/mysql-init');
+const { ParticipantsModel, sequelize, EventPricingModel } = require('../init/mysql-init');
 const { getToken } = require('../init/DTCMAccessToken');
 const logger = require('../api-helpers/logger');
 const { Sequelize } = require('sequelize');
@@ -152,7 +152,7 @@ DTCMService.createCustomer = async (participantsIds = [], performanceCode = "", 
     if (result.length < 1) return "All Participant already have barcode"
     // const data = []
 
-    let participantsCode, basketId, barcode, log, status = "failed"
+    let log, status = "failed"
 
     const data = await Promise.all(result.map(async (r, i) => {
       const customer = await customerApi(r);
@@ -160,12 +160,11 @@ DTCMService.createCustomer = async (participantsIds = [], performanceCode = "", 
       if (customer.status === 200) {  
         console.log(customer)
         result[i].participantsCode = customer?.data?.id
-        participantsCode = customer?.data?.id
+       
         const basket = await craeteBasket(result[i]);
         if (basket.status === 200 ) {
           console.log(basket) 
           result[i].basketId = basket?.data?.id
-          basketId = basket?.data?.id
           const orderPayload = {
             participants_code: customer?.data?.id,
             totalAmount: r.totalAmount,
@@ -182,8 +181,8 @@ DTCMService.createCustomer = async (participantsIds = [], performanceCode = "", 
               status = "sold"
               const BC = orderDetail?.data?.orderLines[0]?.orderLineItems[0]?.barcode;
               result[i].barcode = BC
-              barcode = BC
-
+              await EventPricingModel.increment({sold: 1},{ where: { section: result[i].area, performanceCode } })
+              await ParticipantsModel.update({ status: status, participantsCode: customer?.data?.id, basketId: basket?.data?.id, barcode: BC }, { where: { id: r.id } });
             } else {
               log = JSON.parse(orderDetail.apiResponse)
             }
@@ -197,7 +196,7 @@ DTCMService.createCustomer = async (participantsIds = [], performanceCode = "", 
         log = JSON.parse(customer.apiResponse)
       }
      
-      await ParticipantsModel.update({ status: status, participantsCode, basketId, barcode, generate_barcode_api_respose: log.message}, { where: { id: r.id } });
+      await ParticipantsModel.update({ generate_barcode_api_respose: log.message}, { where: { id: r.id } });
       return result[i]
       
     }));
