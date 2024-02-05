@@ -54,7 +54,7 @@ TicketingController.createEvent = async (req, res) => {
 }
 
 TicketingController.getEventDetails = async (req, res) => {
-  const performanceCode = req.query.PCODE
+  const performanceCode = req.params.PCODE
   
   try {
 
