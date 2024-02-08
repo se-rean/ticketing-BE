@@ -457,7 +457,13 @@ TicketingController.createRandomParticipants = async (req, res) => {
         "city": faker.location.city(),
         "state": faker.location.state(),
         "countrycode": faker.location.countryCode(),
-        "totalAmount": c.amount
+        "totalAmount": c.amount,
+        "salutation": faker.person.prefix(),
+        "offerCode": "",
+        "qualifierCode": "",
+        "job_title": faker.person.jobTitle(),
+        "company_name": faker.company.name(),
+        "type":faker.person.jobType()
     })
     } 
 
