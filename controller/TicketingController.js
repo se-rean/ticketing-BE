@@ -437,40 +437,39 @@ TicketingController.createRandomParticipants = async (req, res) => {
   if(eventExists.length < 1) throw new Error("Event Not exists")
 
   let data = []
-  const payload = category.map(c => {
+  const payload = await Promise.all(category.map(c => {
    
     for(let x = 0; x < c.count; x++) {
       data.push({
-        "performance_code": performanceCode,
-        "area": c.area,
-        "pricetype_code": c.code,
-        "quantity": "1",
-        "firstname": faker.person.firstName(),
-        "lastname": faker.person.lastName(),
-        "nationality": "filipino",
-        "email": faker.internet.email(),
-        "dateofbirth": faker.date.birthdate(),
-        "internationalcode": "PH",
-        "areacode": "AE",
-        "phonenumber": faker.phone.number(),
-        "address_line_1": faker.location.streetAddress({useFullAddress: true}),
-        "city": faker.location.city(),
-        "state": faker.location.state(),
-        "countrycode": faker.location.countryCode(),
-        "totalAmount": c.amount,
-        "salutation": faker.person.prefix(),
-        "offerCode": "",
-        "qualifierCode": "",
-        "job_title": faker.person.jobTitle(),
-        "company_name": faker.company.name(),
-        "type":faker.person.jobType()
-    })
-    } 
-
-  
+          "performance_code": performanceCode,
+          "area": c.area,
+          "pricetype_code": c.code,
+          "quantity": "1",
+          "firstname": faker.person.firstName(),
+          "lastname": faker.person.lastName(),
+          "nationality": "filipino",
+          "email": faker.internet.email(),
+          "dateofbirth": faker.date.birthdate(),
+          "internationalcode": "PH",
+          "areacode": "AE",
+          "phonenumber": faker.phone.number(),
+          "address_line_1": faker.location.streetAddress({useFullAddress: false}),
+          "city": faker.location.city(),
+          "state": faker.location.state(),
+          "countrycode": faker.location.countryCode(),
+          "totalAmount": c.amount,
+          "salutation": faker.person.prefix(),
+          "offerCode": "",
+          "qualifierCode": "",
+          "job_title": faker.person.jobTitle(),
+          "company_name": faker.company.name(),
+          "type":faker.person.jobType()
+      })
+    }
     return data
-  })
+  }))
 
+  console.log(payload)
   const result = await ParticipantsModel.bulkCreate(data)
 
   result.forEach((r, i) => {
