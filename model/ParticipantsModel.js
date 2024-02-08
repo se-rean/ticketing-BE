@@ -35,7 +35,6 @@ class ParticipantsModel extends Sequelize.Model {
         totalAmount: DataTypes.STRING(255),
         salutation: DataTypes.STRING(500),
         offerCode: DataTypes.STRING(255),
-        totalAmount: DataTypes.STRING(255),
         qualifierCode: DataTypes.STRING(500),
         job_title: DataTypes.STRING(255),
         company_name: DataTypes.STRING(255),

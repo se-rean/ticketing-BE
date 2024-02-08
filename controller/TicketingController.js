@@ -135,24 +135,44 @@ TicketingController.getEventDetails = async (req, res) => {
         showCode,
         venueCode
       } = eventDetails.data, { where: { performanceCode } })
+
       
       eventDetails.data.sections.forEach(s => {
-        eventDetails.data.ticketPrices.forEach(t => {
+        eventDetails.data.ticketPrices.forEach(async t => {
           if (s.categoryId === t.categoryId && t.price !== 0) {
-            ep.push({
-              performanceCode,
-              section: s.code,
-              capacity: s.capacity,
-              typeCode: t.typeCode,
-              amount: t.price,
-              state: eventDetails.data.priceTypes.find(p => p.code === t.typeCode).state
-              })
+            const pricing = await EventPricingModel.findAll({ where: { performanceCode, typeCode: t.typeCode  }, raw: true })
+            console.log(pricing)
+            if (pricing.length > 0) {
+              await EventPricingModel.update({ 
+                section: s.code,
+                capacity: s.capacity,
+                typeCode: t.typeCode,
+                amount: t.price,
+                state: eventDetails.data.priceTypes.find(p => p.code === t.typeCode).state
+               }, { where:  { performanceCode, typeCode: t.typeCode  } })
+            } else {
+              await EventPricingModel.create({ 
+                  performanceCode,
+                  section: s.code,
+                  capacity: s.capacity,
+                  typeCode: t.typeCode,
+                  amount: t.price,
+                  state: eventDetails.data.priceTypes.find(p => p.code === t.typeCode).state
+               })
+            }
+            // ep.push({
+            //   performanceCode,
+            //   section: s.code,
+            //   capacity: s.capacity,
+            //   typeCode: t.typeCode,
+            //   amount: t.price,
+            //   state: eventDetails.data.priceTypes.find(p => p.code === t.typeCode).state
+            //   })
           } 
         })
         })
-  
-        await EventPricingModel.destroy({where: { performanceCode }})
-        await EventPricingModel.bulkCreate(ep)
+
+       
     }
  
     const eventDetail = await EventModel.findAll({ where: {performanceCode}, raw: true })

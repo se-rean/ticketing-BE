@@ -12,6 +12,8 @@ class EventModel extends Sequelize.Model {
         amount: DataTypes.STRING(255),
         capacity: DataTypes.STRING(255),
         state: DataTypes.STRING(255),
+        sold: DataTypes.STRING(255),
+        refunded: DataTypes.STRING(255),
       },
       {
         modelName: "eventPricingModel",
