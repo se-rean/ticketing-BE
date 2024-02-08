@@ -149,7 +149,7 @@ DTCMService.createCustomer = async (participantsIds = [], performanceCode = "", 
           {
             [Sequelize.Op.or]: [
               {status: null},
-              {status: ""},
+              {status: "pending"},
             ]
           }
         ],
@@ -200,7 +200,7 @@ DTCMService.createCustomer = async (participantsIds = [], performanceCode = "", 
         log = JSON.parse(customer.apiResponse)
       }
      
-      await ParticipantsModel.update({ generate_barcode_api_respose: log.message}, { where: { id: r.id } });
+      await ParticipantsModel.update({ status , generate_barcode_api_respose: log.message}, { where: { id: r.id } });
       return result[i]
       
     }));

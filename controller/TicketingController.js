@@ -26,6 +26,10 @@ TicketingController.createEvent = async (req, res) => {
 
   try {
 
+    const eventDetails = await DTCMService.getEventDetails(performanceCode)
+    console.log(eventDetails)
+    if (eventDetails.status !== 200) throw new Error("Event/Performance Code Not Available")
+    
     const eventExists = await EventModel.findAll({ where: {performanceCode}, raw: true })
     if(eventExists.length > 0) throw new Error("Event Already exists")
 
