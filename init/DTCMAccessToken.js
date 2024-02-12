@@ -10,11 +10,11 @@ const TOKEN_REFRESH_INTERVAL = 20 * 60; // 20 minutes in seconds
 async function getAccessToken() {
 
   const response = await axios.post(token_url, {
-    "client_id": "ASAEV1",
-    "client_secret": "XOG0O6l_Kmi3xMp7QXepG67Ecm3VU6TNgim3IcD_",
-    "scope": "profile",
-    "grant_type": "client_credentials",
-    "resource": "https://et-apiuat.detsandbox.com"
+    "client_id": process.env.client_id,
+    "client_secret": process.env.client_secret,
+    "scope": process.env.scope,
+    "grant_type": process.env.grant_type,
+    "resource": process.env.resource
   });
 
   const accessToken = response.data.access_token;

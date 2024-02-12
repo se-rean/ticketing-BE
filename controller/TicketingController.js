@@ -83,12 +83,13 @@ TicketingController.createRefund = async (req, res) => {
           participants
         }
       }, raw: true })
-    if(participantsData.length < 1) throw new Error("Participant/s Not exists")
-      console.log(participantsData)
+    if(participantsData.length < 1) throw new Error("Participant/s not Available for refund")
     const result = await Promise.all(participantsData.map(async p => {
-      const refunded = await DTCMService.refund(p.orderId, p.totalAmount, 'ABART11')
+      const refunded = await DTCMService.refund(p.orderId, p.totalAmount, process.env.client_id)
       if (refunded.status === 204) {
         ParticipantsModel.update({ status: 'refunded', generate_barcode_api_respose: 'refund successful' }, { where: {id: p.id} })
+        await EventPricingModel.decrement({sold: 1},{ where: { section: p.area, performanceCode: p.performance_code } })
+        await EventPricingModel.increment({refunded: 1},{ where: { section: p.area, performanceCode: p.performance_code } })
       } else {
         let log = JSON.parse(refunded.apiResponse)
         ParticipantsModel.update({ generate_barcode_api_respose: 'Error on refund: '+log.message }, { where: {id: p.id} })
@@ -149,7 +150,7 @@ TicketingController.getEventDetails = async (req, res) => {
                 typeCode: t.typeCode,
                 amount: t.price,
                 state: eventDetails.data.priceTypes.find(p => p.code === t.typeCode).state
-               }, { where:  { performanceCode, typeCode: t.typeCode  } })
+               }, { where:  { performanceCode, typeCode: t.typeCode, section: s.code  } })
             } else {
               await EventPricingModel.create({ 
                   performanceCode,
@@ -320,7 +321,7 @@ TicketingController.getParticipants = async (req, res) => {
           order: [["barcode", "ASC"]],
           raw: true,
         },
-        { page: page || 1, page_size: page_size || 10 }
+        { page: page || 1, page_size: page_size || 3000 }
       )
     )
     if (!participants) throw new Error("Error: "+ JSON.stringify(result))

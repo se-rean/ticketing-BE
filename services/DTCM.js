@@ -1,20 +1,21 @@
 const DTCMService = {};
 const { ParticipantsModel, sequelize, EventPricingModel } = require('../init/mysql-init');
 const { getToken } = require('../init/DTCMAccessToken');
-const logger = require('../api-helpers/logger');
 const { Sequelize } = require('sequelize');
+const axios = require('axios');
+const request = require('request');
 
 const API_URL = process.env.ENV == "development" ? process.env.DEV_API_URL : process.env.PROD_API_URL;
 const API_KEY = process.env.ENV == "development" ? process.env.DEV_API_KEY : process.env.PROD_API_KEY;
 
-const createHeaders = async () => {
+const createHeaders1 = async () => {
   const headers = new Headers();
   headers.append('Authorization', `Bearer ${await getToken()}`);
   headers.append('Content-Type', 'application/json');
   return headers;
 };
 
-const fetchWithHeaders = async (url, options = {}) => {
+const fetchWithHeaders1 = async (url, options = {}) => {
   const headers = await createHeaders();
   options.headers = headers;
   try {
@@ -37,6 +38,87 @@ const fetchWithHeaders = async (url, options = {}) => {
   } catch (error) {
     return error
   }
+};
+
+const createHeaders2 = async () => {
+  const headers = {
+    'Authorization': `Bearer ${await getToken()}`,
+    'Content-Type': 'application/json'
+  };
+  return headers;
+};
+
+const fetchWithHeaders2 = async (url, options = {}) => {
+  const headers = await createHeaders();
+  try {
+    const response = await axios(`${API_URL}/${url}?api_key=${API_KEY}`, {
+      ...options,
+      headers: headers
+    });
+
+    
+
+    const responseData = {
+      status: response.status,
+      ok: response.status >= 200 && response.status < 300,
+      // apiResponse: JSON.stringify(response.data)
+    };
+
+    if (response.status >= 200 && response.status < 300) {
+      if (response.status !== 204) {
+        responseData.data = response.data;
+      }
+    } else {
+      responseData.apiResponse = JSON.stringify(response.data);
+    }
+    console.log("axios", responseData)
+    return responseData;
+  } catch (error) {
+    return error;
+  }
+};
+
+const createHeaders = async () => {
+  const headers = {
+    'Authorization': `Bearer ${await getToken()}`,
+    'Content-Type': 'application/json'
+  };
+  return headers;
+};
+
+const fetchWithHeaders = async (url, options = {}) => {
+  const headers = await createHeaders();
+  const requestOptions = {
+    url: `${API_URL}/${url}?api_key=${API_KEY}`,
+    headers: headers,
+    ...options
+  };
+
+  const apiResult = await new Promise((resolve, reject) => {
+    request(requestOptions, (error, response, body) => {
+      if (error) {
+        reject(error);
+      } else {
+        const responseData = {
+          status: response.statusCode,
+          ok: response.statusCode >= 200 && response.statusCode < 300,
+          // apiResponse: JSON.stringify(body)
+        };
+
+        if (response.statusCode >= 200 && response.statusCode < 300) {
+          if (response.statusCode !== 204) {
+            responseData.data = JSON.parse(body);
+          }
+        } else {
+          responseData.apiResponse = JSON.stringify(body);
+        }
+
+        resolve(responseData);
+      }
+    });
+  });
+
+  return apiResult
 };
 
 DTCMService.getEventDetails = async (performanceCode) => {
@@ -72,7 +154,7 @@ async function orderDetails(orderId) {
 
 async function purchaseBasket(participant) {
   const raw = JSON.stringify({
-    Seller: 'ASAEV1',
+    Seller: process.env.client_id,
     customer: [{ ID: participant.participants_code, Account: 0, AFile: 'tel' }],
     Payments: [{ Amount: participant.totalAmount, MeansOfPayment: 'EXTERNAL' }],
   });
@@ -101,7 +183,7 @@ async function customerApi(customer) {
 async function craeteBasket(participant) {
   const raw = JSON.stringify({
     "Channel": "5",
-    "Seller": "ABART11",
+    "Seller": process.env.client_id,
     "Performancecode": participant.performance_code,
     "Area": participant.area,
     "autoReduce": false,
@@ -150,6 +232,7 @@ DTCMService.createCustomer = async (participantsIds = [], performanceCode = "", 
             [Sequelize.Op.or]: [
               {status: null},
               {status: "pending"},
+              {status: "failed"},
             ]
           }
         ],
@@ -199,7 +282,11 @@ DTCMService.createCustomer = async (participantsIds = [], performanceCode = "", 
       } else {
         log = JSON.parse(customer.apiResponse)
       }
-     
+
+      if (typeof log == 'string') {
+        log = JSON.parse(log)
+      }
+
       await ParticipantsModel.update({ status , generate_barcode_api_respose: log.message}, { where: { id: r.id } });
       return result[i]
       
