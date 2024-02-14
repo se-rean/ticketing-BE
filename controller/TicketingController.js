@@ -313,7 +313,7 @@ TicketingController.getParticipants = async (req, res) => {
   const { page, page_size } = req.query;
 
   try {
-    
+    const allParticipants = await ParticipantsModel.findAll({where: { performance_code: performanceCode }})
     const participants = await ParticipantsModel.findAll(
       queryPaginate(
         {
@@ -329,7 +329,8 @@ TicketingController.getParticipants = async (req, res) => {
     res.send(dataToSnakeCase(apiResponse({
       statusCode: 200,
       message: "sucessful",
-      count: participants.length,
+      count: allParticipants.length,
+      pages: (allParticipants.length / page_size),
       data: participants,
     })));
 
