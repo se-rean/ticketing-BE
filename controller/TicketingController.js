@@ -174,6 +174,10 @@ TicketingController.getEventDetails = async (req, res) => {
         })
 
        
+    } else {
+      await EventModel.update({
+        status: eventStatus[3]
+      }, { where: { performanceCode } })
     }
  
     const eventDetail = await EventModel.findAll({ where: {performanceCode}, raw: true })
@@ -318,7 +322,7 @@ TicketingController.getParticipants = async (req, res) => {
       queryPaginate(
         {
           where: { performance_code: performanceCode },
-          order: [["barcode", "ASC"]],
+          order: [["status", "ASC"], ["createdAt", "DESC"]],
           raw: true,
         },
         { page: page || 1, page_size: page_size || 3000 }
