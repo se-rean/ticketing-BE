@@ -127,15 +127,15 @@ TicketingController.getEventDetails = async (req, res) => {
 
     let ep = []
     if (eventDetails.data) {
-      await EventModel.update({
+      await EventModel.update({...{
         name,
         startDate,
         endDate,
         webSaleStartDate,
         webSaleEndDate,
         showCode,
-        venueCode
-      } = eventDetails.data, { where: { performanceCode } })
+        venueCode, 
+      } = eventDetails.data,  status: eventStatus[1]}, { where: { performanceCode } })
 
       
       eventDetails.data.sections.forEach(s => {
