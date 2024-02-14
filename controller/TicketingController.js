@@ -441,6 +441,7 @@ TicketingController.createRandomParticipants = async (req, res) => {
   let data = []
   const payload = await Promise.all(category.map(c => {
    
+    const countryCode = faker.location.countryCode()
     for(let x = 0; x < c.count; x++) {
       data.push({
           "performance_code": performanceCode,
@@ -449,16 +450,16 @@ TicketingController.createRandomParticipants = async (req, res) => {
           "quantity": "1",
           "firstname": faker.person.firstName(),
           "lastname": faker.person.lastName(),
-          "nationality": "filipino",
+          "nationality": faker.location.countryCode(),
           "email": faker.internet.email(),
           "dateofbirth": faker.date.birthdate(),
-          "internationalcode": "PH",
-          "areacode": "AE",
+          "internationalcode": countryCode,
+          "areacode": countryCode,
           "phonenumber": faker.phone.number(),
           "address_line_1": faker.location.streetAddress({useFullAddress: false}),
           "city": faker.location.city(),
           "state": faker.location.state(),
-          "countrycode": faker.location.countryCode(),
+          "countrycode": countryCode,
           "totalAmount": c.amount,
           "salutation": faker.person.prefix(),
           "offerCode": "",
