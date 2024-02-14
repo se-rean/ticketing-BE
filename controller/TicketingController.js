@@ -13,7 +13,8 @@ const TicketingController = {};
 const eventStatus = {
   1: 'Pending For Barcode Generation',
   2: 'Completed',
-  3: 'Cancelled'
+  3: 'Cancelled',
+  4: 'Event Not Available'
 }
 
 TicketingController.createEvent = async (req, res) => {
@@ -127,7 +128,7 @@ TicketingController.getEventDetails = async (req, res) => {
 
     let ep = []
     if (eventDetails.data) {
-      await EventModel.update({...{
+      await EventModel.update({
         name,
         startDate,
         endDate,
@@ -135,7 +136,7 @@ TicketingController.getEventDetails = async (req, res) => {
         webSaleEndDate,
         showCode,
         venueCode, 
-      } = eventDetails.data,  status: eventStatus[1]}, { where: { performanceCode } })
+      } = eventDetails.data, { where: { performanceCode } })
 
       
       eventDetails.data.sections.forEach(s => {
@@ -176,7 +177,7 @@ TicketingController.getEventDetails = async (req, res) => {
        
     } else {
       await EventModel.update({
-        status: eventStatus[3]
+        status: eventStatus[4]
       }, { where: { performanceCode } })
     }
  
