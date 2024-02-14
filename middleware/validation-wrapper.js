@@ -1,4 +1,5 @@
 const { validationResult } = require('express-validator')
+const { apiResponse } = require('../api-helpers/ResponseController')
 
 const validationWrapper = (validations) => {
   return async (req, res, next) => {
@@ -9,7 +10,7 @@ const validationWrapper = (validations) => {
       return next()
     }
 
-    return res.send(errors)
+    return res.send(apiResponse({ isSuccess: false, errors: errors }))
   }
 }
 
