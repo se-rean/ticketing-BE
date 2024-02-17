@@ -169,7 +169,7 @@ async function customerApi(customer) {
     lastName: customer.lastname,
     email: customer.email,
     dateOfBirth: customer.dateofbirth,
-    nationality: customer.internationalcode,
+    nationality: customer.nationality,
     phoneNumber: customer.phonenumber,
     areaCode: customer.areacode,
     city: customer.city,

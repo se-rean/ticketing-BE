@@ -17,6 +17,13 @@ const eventStatus = {
   4: 'Event Not Available'
 }
 
+const participantsStatus = {
+  1: 'pending',
+  2: 'refunded',
+  3: 'failed',
+  4: 'sold'
+}
+
 TicketingController.createEvent = async (req, res) => {
   
   const {
@@ -315,14 +322,24 @@ TicketingController.getParticipants = async (req, res) => {
 
   const performanceCode = req.params.PCODE
 
-  const { page, page_size } = req.query;
+  const { page, page_size, status } = req.query;
 
   try {
     const allParticipants = await ParticipantsModel.findAll({where: { performance_code: performanceCode }})
+    const failedParticipants = allParticipants.filter(p => p.status === 'failed');
+    const soldParticipants = allParticipants.filter(p => p.status === 'sold');
+    const refundedParticipants = allParticipants.filter(p => p.status === 'refunded');
+    const pendingParticipants = allParticipants.filter(p => p.status === 'pending');
+    const query = {  performance_code: performanceCode }
+
+    if (participantsStatus[status]) {
+      query.status = participantsStatus[status]
+    }
+
     const participants = await ParticipantsModel.findAll(
       queryPaginate(
         {
-          where: { performance_code: performanceCode },
+          where: query,
           order: [["status", "ASC"], ["createdAt", "DESC"]],
           raw: true,
         },
@@ -331,10 +348,26 @@ TicketingController.getParticipants = async (req, res) => {
     )
     if (!participants) throw new Error("Error: "+ JSON.stringify(result))
 
+    let count = allParticipants.length;
+    if (participantsStatus[status]) {
+      let counter = {
+        failed: failedParticipants.length,
+        pending: failedParticipants.length,
+        sold: soldParticipants.length,
+        refunded: refundedParticipants.length,
+      }
+
+      count = counter[participantsStatus[status]]
+    }
+
     res.send(dataToSnakeCase(apiResponse({
       statusCode: 200,
       message: "sucessful",
-      count: allParticipants.length,
+      count: count,
+      failed: failedParticipants.length,
+      pending: failedParticipants.length,
+      sold: soldParticipants.length,
+      refunded: refundedParticipants.length,
       pages: (allParticipants.length / page_size),
       data: participants,
     })));
