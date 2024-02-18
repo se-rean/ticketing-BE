@@ -365,7 +365,7 @@ TicketingController.getParticipants = async (req, res) => {
       message: "sucessful",
       count: count,
       failed: failedParticipants.length,
-      pending: failedParticipants.length,
+      pending: pendingParticipants.length,
       sold: soldParticipants.length,
       refunded: refundedParticipants.length,
       pages: (allParticipants.length / page_size),
