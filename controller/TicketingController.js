@@ -352,7 +352,7 @@ TicketingController.getParticipants = async (req, res) => {
     if (participantsStatus[status]) {
       let counter = {
         failed: failedParticipants.length,
-        pending: failedParticipants.length,
+        pending: pendingParticipants.length,
         sold: soldParticipants.length,
         refunded: refundedParticipants.length,
       }
