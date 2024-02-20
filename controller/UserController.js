@@ -43,8 +43,20 @@ UserController.create = async (req, res) => {
     username,
     password,
   } = req.body
+  const userData = req.user
 
   try {
+
+    const role = await UserModel.findAll({
+      where: {
+        id: userData.user.id,
+        role: 'admin'
+      },
+        raw: true,
+        attributes: { exclude: ["password"] },
+    });
+ 
+    if (role.length == 0) throw new Error('Account restricted for user creation')
 
     const UserExists = await UserModel.findAll({
       where: {
