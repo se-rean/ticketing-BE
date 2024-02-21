@@ -214,6 +214,15 @@ TicketingController.getAllEvent = async (req, res) => {
     const events = await EventModel.findAll({raw: true })
     if(events.length < 1) throw new Error("Event Not exists")
  
+    console.log(events)
+
+    await Promise.all(
+      events.map(async (e, index) => {
+        const count = await ParticipantsModel.count({ where: { performance_code: e.performanceCode } })
+        events[index] = { ...e, count  }
+      })
+    )
+
     res.send(dataToSnakeCase(apiResponse({
       statusCode: 200,
       message: "sucessful",
