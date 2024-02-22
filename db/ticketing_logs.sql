@@ -16,29 +16,21 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `events`
+-- Table structure for table `logs`
 --
 
-DROP TABLE IF EXISTS `events`;
+DROP TABLE IF EXISTS `logs`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `events` (
+CREATE TABLE `logs` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `performanceCode` varchar(45) DEFAULT NULL,
-  `title` varchar(45) DEFAULT NULL,
-  `description` text,
-  `status` varchar(45) DEFAULT NULL,
-  `name` varchar(45) DEFAULT NULL,
-  `startDate` varchar(45) DEFAULT NULL,
-  `endDate` varchar(45) DEFAULT NULL,
-  `webSaleStartDate` varchar(45) DEFAULT NULL,
-  `showCode` varchar(45) DEFAULT NULL,
-  `webSaleEndDate` varchar(45) DEFAULT NULL,
-  `venueCode` text,
+  `type` varchar(45) DEFAULT NULL,
+  `userId` varchar(45) DEFAULT NULL,
+  `actions` text,
   `createdAt` timestamp NULL DEFAULT NULL,
   `updatedAt` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=76 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=43 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 

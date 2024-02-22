@@ -25,7 +25,6 @@ AuthController.login = async (req, res) => {
   try {
 
     const hashedPassword = crypto.createHash('md5').update(password).digest('hex');
-    console.log(hashedPassword)
     const user = await UserModel.findOne({
         where: {
           username,

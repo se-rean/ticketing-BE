@@ -38,7 +38,6 @@ TicketingController.createEvent = async (req, res) => {
   try {
 
     const eventDetails = await DTCMService.getEventDetails(performanceCode)
-    console.log(eventDetails)
     if (eventDetails.status !== 200) throw new Error("Event/Performance Code Not Available")
     
     const eventExists = await EventModel.findAll({ where: {performanceCode}, raw: true })
@@ -171,7 +170,6 @@ TicketingController.getEventDetails = async (req, res) => {
         eventDetails.data.ticketPrices.forEach(async t => {
           if (s.categoryId === t.categoryId && t.price !== 0) {
             const pricing = await EventPricingModel.findAll({ where: { performanceCode, typeCode: t.typeCode  }, raw: true })
-            console.log(pricing)
             if (pricing.length > 0) {
               await EventPricingModel.update({ 
                 section: s.code,
@@ -234,8 +232,6 @@ TicketingController.getAllEvent = async (req, res) => {
 
     const events = await EventModel.findAll({raw: true })
     if(events.length < 1) throw new Error("Event Not exists")
- 
-    console.log(events)
 
     await Promise.all(
       events.map(async (e, index) => {
