@@ -2,6 +2,8 @@
 
 const { apiResponse } = require("../api-helpers/ResponseController");
 const dataToSnakeCase = require("../api-helpers/data_to_snake_case");
+const Logger = require('../lib/logger')
+const logsConstant = require('../lib/logsConstant')
 const regcodeWrapper = require("../api-helpers/regcode-generator-wrapper");
 const crypto = require('crypto');
 const { UserModel, sequelize } = require("../init/mysql-init");
@@ -77,6 +79,15 @@ UserController.create = async (req, res) => {
       username,
       password: crypto.createHash('md5').update(password).digest('hex'),
     });
+
+    Logger.create(logsConstant.user, `Create userId ${User.dataValues.id} details ${   regcode,
+      fname,
+      lname,
+      mname,
+      email,
+      phone,
+      username,
+      password }`, req.user.user.id)
     
     res.send(dataToSnakeCase(apiResponse({
       statusCode: 200,
@@ -124,6 +135,8 @@ UserController.update = async (req, res) => {
         raw: true,
         // attributes: { exclude: ["password"] },
     });
+
+    Logger.create(logsConstant.user, `Update userId ${userData.user.id} details ${ JSON.stringify(query) }`, req.user.user.id)
 
     res.send(dataToSnakeCase(apiResponse({
       statusCode: 200,
@@ -187,6 +200,8 @@ UserController.deleteById = async (req, res) => {
         id
       },
     });
+
+    Logger.create(logsConstant.user,`Delete userId ${id}`, req.user.user.id)
 
     res.send(dataToSnakeCase(apiResponse({
       statusCode: 200,

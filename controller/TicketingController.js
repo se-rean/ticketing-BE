@@ -2,6 +2,8 @@
 
 const { TicketingModel, sequelize, EventModel, EventPricingModel } = require("../init/mysql-init");
 const DTCMService = require("../services/DTCM");
+const logsConstant = require('../lib/logsConstant')
+const Logger = require('../lib/logger')
 const { apiResponse } = require("../api-helpers/ResponseController");
 const dataToSnakeCase = require("../api-helpers/data_to_snake_case");
 const ParticipantsModel = require("../model/ParticipantsModel");
@@ -50,6 +52,8 @@ TicketingController.createEvent = async (req, res) => {
 
     if (!event) throw new Error("Error encounter on create event")
     
+    Logger.create(logsConstant.event,`Created Event performanceCode ${performanceCode}`, req.user.user.id)
+
     res.send(dataToSnakeCase(apiResponse({
       statusCode: 200,
       message: "sucessful",
@@ -98,9 +102,13 @@ TicketingController.createRefund = async (req, res) => {
         ParticipantsModel.update({ status: 'refunded', generate_barcode_api_respose: 'refund successful' }, { where: {id: p.id} })
         await EventPricingModel.decrement({sold: 1},{ where: { section: p.area, performanceCode: p.performance_code } })
         await EventPricingModel.increment({refunded: 1},{ where: { section: p.area, performanceCode: p.performance_code } })
+
+        Logger.create(logsConstant.ticketing,`Refund PCODE ${PCODE} participant ${p.id} details orderId:${p.orderId} totalAmount:${p.totalAmount} client_id:${process.env.client_id}`, req.user.user.id)
+
       } else {
         let log = JSON.parse(refunded.apiResponse)
         ParticipantsModel.update({ generate_barcode_api_respose: 'Error on refund: '+log.message }, { where: {id: p.id} })
+        Logger.create(logsConstant.ticketing, `Error on Refund PCODE ${PCODE} participant ${p.id} details orderId:${p.orderId} totalAmount:${p.totalAmount} client_id:${process.env.client_id}`, req.user.user.id)
       }
     }))
     
@@ -122,7 +130,7 @@ TicketingController.createRefund = async (req, res) => {
 }
 
 TicketingController.getEventDetails = async (req, res) => {
-  const performanceCode = req.params.PCODE
+  const performanceCode = req.query.PCODE
   
   try {
 
@@ -285,6 +293,8 @@ TicketingController.updateEventDetails = async (req, res) => {
 
     const eventData = await EventModel.findAll({ where: {performanceCode: PCODE}, raw: true })
 
+    Logger.create(logsConstant.event,`Update Event performanceCode ${PCODE} details ${JSON.stringify( { title, status, description } )}`, req.user.user.id)
+
     res.send(dataToSnakeCase(apiResponse({
       statusCode: 200,
       message: "sucessful",
@@ -398,6 +408,8 @@ TicketingController.createParticipants = async (req, res) => {
  
     const result = await ParticipantsModel.bulkCreate(participants)
     
+    Logger.create(logsConstant.participants,`Create participants performanceCode ${participants[0].performance_code} Id's ${ result.map(p => p.dataValues.id ) }`, req.user.user.id)
+
     res.send(dataToSnakeCase(apiResponse({
       statusCode: 200,
       message: "sucessful",
@@ -427,6 +439,8 @@ TicketingController.editParticipants = async (req, res) => {
       raw: true
     })
     
+    Logger.create(logsConstant.participants,`Update participants ${id} details ${ JSON.stringify(query) }`, req.user.user.id)
+
     res.send(dataToSnakeCase(apiResponse({
       statusCode: 200,
       message: "sucessful",
@@ -457,6 +471,8 @@ TicketingController.deleteParticipants = async (req, res) => {
         barcode: null
       }
     })
+
+    Logger.create(logsConstant.participants, `Delete participants ${id} details ${ JSON.stringify(query) }`, req.user.user.id)
 
     res.send(dataToSnakeCase(apiResponse({
       statusCode: 200,
@@ -519,12 +535,13 @@ TicketingController.createRandomParticipants = async (req, res) => {
     return data
   }))
 
-  console.log(payload)
   const result = await ParticipantsModel.bulkCreate(data)
 
   result.forEach((r, i) => {
     result[i] = r.dataValues
   })
+
+  Logger.create(logsConstant.participants,`Create performanceCode ${performanceCode} random participant ${result.map(r => r.id) }`, req.user.user.id)
 
   res.send(dataToSnakeCase(apiResponse({
     statusCode: 200,
@@ -548,7 +565,7 @@ TicketingController.createBarcode = async (req, res) => {
   try {
     let createCustomer = {}
     for(let x = 0; x < retry; x++) {
-      createCustomer = await DTCMService.createCustomer(participantsIds, performanceCode, limit);
+      createCustomer = await DTCMService.createCustomer(participantsIds, performanceCode, limit, req.user.user.id);
     }
    
     res.send(dataToSnakeCase(apiResponse({

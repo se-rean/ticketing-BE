@@ -1,10 +1,12 @@
 const { apiResponse } = require("../api-helpers/ResponseController");
 const logger = require("../api-helpers/logger");
 const dataToSnakeCase = require("../api-helpers/data_to_snake_case");
-const AuthController = {};
+const AuthController = {}; 
+const logsConstant = require('../lib/logsConstant')
 const { UserModel } = require("../init/mysql-init");
 const jwt = require("jsonwebtoken");
 const crypto = require('crypto');
+const Logger = require("../lib/logger");
 
 const generateAccessToken = (user) => {
   return jwt.sign({ user }, process.env.ACCESS_SECRET, {
@@ -45,6 +47,7 @@ AuthController.login = async (req, res) => {
 
     logger.info(`User ${username} logged in successfully`);
     
+    Logger.create(logsConstant.user, `Login user ${username}`, user.id)
     res.send(
       dataToSnakeCase(
         apiResponse({

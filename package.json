@@ -35,6 +35,8 @@
     "sequelize": "^6.32.1",
     "socket.io": "^4.6.1",
     "speakeasy": "^2.0.0",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.0",
     "uuid": "^9.0.0",
     "winston": "^3.11.0"
   },
@@ -43,6 +45,7 @@
     "eslint": "^8.40.0",
     "eslint-config-google": "^0.14.0",
     "eslint-plugin-prettier": "^4.2.1",
+    "express-swagger-generator": "^1.1.17",
     "prettier": "^2.8.8"
   }
 }

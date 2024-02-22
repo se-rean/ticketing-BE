@@ -3,6 +3,8 @@ const { ParticipantsModel, sequelize, EventPricingModel } = require('../init/mys
 const { getToken } = require('../init/DTCMAccessToken');
 const { Sequelize } = require('sequelize');
 const axios = require('axios');
+const Logger = require('../lib/logger')
+const logsConstant = require('../lib/logsConstant')
 const request = require('request');
 
 const API_URL = process.env.ENV == "development" ? process.env.DEV_API_URL : process.env.PROD_API_URL;
@@ -205,7 +207,7 @@ async function craeteBasket(participant) {
   return fetchWithHeaders('baskets', options);
 }
 
-DTCMService.createCustomer = async (participantsIds = [], performanceCode = "", limit=100) => {
+DTCMService.createCustomer = async (participantsIds = [], performanceCode = "", limit=100, userId = "") => {
   try { 
     const result = await ParticipantsModel.findAll({
       where: {
@@ -270,6 +272,9 @@ DTCMService.createCustomer = async (participantsIds = [], performanceCode = "", 
               result[i].barcode = BC
               await EventPricingModel.increment({sold: 1},{ where: { section: result[i].area, performanceCode } })
               await ParticipantsModel.update({ status: status, participantsCode: customer?.data?.id, basketId: basket?.data?.id, barcode: BC, orderId: order?.data?.orderId }, { where: { id: r.id } });
+
+              Logger.create(logsConstant.ticketing, `Create participant ${r.id} barcode ${ JSON.stringify(BC) }`, userId)
+
             } else {
               log = JSON.parse(orderDetail.apiResponse)
             }
