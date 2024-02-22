@@ -46,8 +46,12 @@ AuthController.login = async (req, res) => {
     const token = { accessToken, refreshToken }; // Add expiresIn property
 
     logger.info(`User ${username} logged in successfully`);
+    try {
+      Logger.create(logsConstant.user, `Login user ${username}`, user.id)
+    } catch (error) {
+      logger.info('error on create logs')
+    }
     
-    Logger.create(logsConstant.user, `Login user ${username}`, user.id)
     res.send(
       dataToSnakeCase(
         apiResponse({

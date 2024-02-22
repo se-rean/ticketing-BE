@@ -10,6 +10,7 @@ const ParticipantsModel = require("../model/ParticipantsModel");
 const queryPaginate = require("../api-helpers/query-paginate");
 const { faker, fa } = require('@faker-js/faker');
 const { Sequelize, where } = require("sequelize");
+const logger = require("../api-helpers/logger");
 
 const TicketingController = {};
 const eventStatus = {
@@ -52,7 +53,11 @@ TicketingController.createEvent = async (req, res) => {
 
     if (!event) throw new Error("Error encounter on create event")
     
-    Logger.create(logsConstant.event,`Created Event performanceCode ${performanceCode}`, req.user.user.id)
+    try {
+      Logger.create(logsConstant.event,`Created Event performanceCode ${performanceCode}`, req.user.user.id)
+    } catch (error) {
+      logger.info("error on create logs")
+    }
 
     res.send(dataToSnakeCase(apiResponse({
       statusCode: 200,
@@ -103,12 +108,20 @@ TicketingController.createRefund = async (req, res) => {
         await EventPricingModel.decrement({sold: 1},{ where: { section: p.area, performanceCode: p.performance_code } })
         await EventPricingModel.increment({refunded: 1},{ where: { section: p.area, performanceCode: p.performance_code } })
 
-        Logger.create(logsConstant.ticketing,`Refund PCODE ${PCODE} participant ${p.id} details orderId:${p.orderId} totalAmount:${p.totalAmount} client_id:${process.env.client_id}`, req.user.user.id)
+        try {
+          Logger.create(logsConstant.ticketing,`Refund PCODE ${PCODE} participant ${p.id} details orderId:${p.orderId} totalAmount:${p.totalAmount} client_id:${process.env.client_id}`, req.user.user.id)
+        } catch (error) {
+          logger.info("error on create logs")
+        }
 
       } else {
         let log = JSON.parse(refunded.apiResponse)
         ParticipantsModel.update({ generate_barcode_api_respose: 'Error on refund: '+log.message }, { where: {id: p.id} })
-        Logger.create(logsConstant.ticketing, `Error on Refund PCODE ${PCODE} participant ${p.id} details orderId:${p.orderId} totalAmount:${p.totalAmount} client_id:${process.env.client_id}`, req.user.user.id)
+        try {
+          Logger.create(logsConstant.ticketing, `Error on Refund PCODE ${PCODE} participant ${p.id} details orderId:${p.orderId} totalAmount:${p.totalAmount} client_id:${process.env.client_id}`, req.user.user.id)
+        } catch (error) {
+          logger.info("error on create logs")
+        } 
       }
     }))
     
@@ -293,7 +306,12 @@ TicketingController.updateEventDetails = async (req, res) => {
 
     const eventData = await EventModel.findAll({ where: {performanceCode: PCODE}, raw: true })
 
-    Logger.create(logsConstant.event,`Update Event performanceCode ${PCODE} details ${JSON.stringify( { title, status, description } )}`, req.user.user.id)
+    try {
+      Logger.create(logsConstant.event,`Update Event performanceCode ${PCODE} details ${JSON.stringify( { title, status, description } )}`, req.user.user.id)
+    } catch (error) {
+      logger.info("error on create logs")
+    } 
+    
 
     res.send(dataToSnakeCase(apiResponse({
       statusCode: 200,
@@ -408,7 +426,11 @@ TicketingController.createParticipants = async (req, res) => {
  
     const result = await ParticipantsModel.bulkCreate(participants)
     
-    Logger.create(logsConstant.participants,`Create participants performanceCode ${participants[0].performance_code} Id's ${ result.map(p => p.dataValues.id ) }`, req.user.user.id)
+    try {
+      Logger.create(logsConstant.participants,`Create participants performanceCode ${participants[0].performance_code} Id's ${ result.map(p => p.dataValues.id ) }`, req.user.user.id)
+    } catch (error) {
+      logger.info("error on create logs")
+    } 
 
     res.send(dataToSnakeCase(apiResponse({
       statusCode: 200,
@@ -439,7 +461,11 @@ TicketingController.editParticipants = async (req, res) => {
       raw: true
     })
     
-    Logger.create(logsConstant.participants,`Update participants ${id} details ${ JSON.stringify(query) }`, req.user.user.id)
+    try {
+      Logger.create(logsConstant.participants,`Update participants ${id} details ${ JSON.stringify(query) }`, req.user.user.id)
+    } catch (error) {
+      logger.info("error on create logs")
+    }    
 
     res.send(dataToSnakeCase(apiResponse({
       statusCode: 200,
@@ -472,7 +498,11 @@ TicketingController.deleteParticipants = async (req, res) => {
       }
     })
 
-    Logger.create(logsConstant.participants, `Delete participants ${id} details ${ JSON.stringify(query) }`, req.user.user.id)
+    try {
+      Logger.create(logsConstant.participants, `Delete participants ${id} details ${ JSON.stringify(query) }`, req.user.user.id)
+    } catch (error) {
+      logger.info("error on create logs")
+    }
 
     res.send(dataToSnakeCase(apiResponse({
       statusCode: 200,
@@ -541,8 +571,13 @@ TicketingController.createRandomParticipants = async (req, res) => {
     result[i] = r.dataValues
   })
 
-  Logger.create(logsConstant.participants,`Create performanceCode ${performanceCode} random participant ${result.map(r => r.id) }`, req.user.user.id)
-
+  try {
+    Logger.create(logsConstant.participants,`Create performanceCode ${performanceCode} random participant ${result.map(r => r.id) }`, req.user.user.id)
+  } catch (error) {
+    logger.info("error on create logs")
+  }
+  
+  
   res.send(dataToSnakeCase(apiResponse({
     statusCode: 200,
     message: "sucessful",

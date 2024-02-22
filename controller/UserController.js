@@ -7,6 +7,7 @@ const logsConstant = require('../lib/logsConstant')
 const regcodeWrapper = require("../api-helpers/regcode-generator-wrapper");
 const crypto = require('crypto');
 const { UserModel, sequelize } = require("../init/mysql-init");
+const logger = require("../api-helpers/logger");
 
 const UserController = {};
 UserController.get = async (req, res) => {
@@ -80,14 +81,18 @@ UserController.create = async (req, res) => {
       password: crypto.createHash('md5').update(password).digest('hex'),
     });
 
-    Logger.create(logsConstant.user, `Create userId ${User.dataValues.id} details ${   regcode,
-      fname,
-      lname,
-      mname,
-      email,
-      phone,
-      username,
-      password }`, req.user.user.id)
+    try {
+      Logger.create(logsConstant.user, `Create userId ${User.dataValues.id} details ${   regcode,
+        fname,
+        lname,
+        mname,
+        email,
+        phone,
+        username }`, req.user.user.id)
+    } catch (error) {
+      logger.info("error on create logs")
+    }
+    
     
     res.send(dataToSnakeCase(apiResponse({
       statusCode: 200,
@@ -136,8 +141,14 @@ UserController.update = async (req, res) => {
         // attributes: { exclude: ["password"] },
     });
 
-    Logger.create(logsConstant.user, `Update userId ${userData.user.id} details ${ JSON.stringify(query) }`, req.user.user.id)
+    delete query?.password
+    try {
+      Logger.create(logsConstant.user, `Update userId ${userData.user.id} details ${ JSON.stringify(query) }`, req.user.user.id)
 
+    } catch (error) {
+      logger.info("error on create logs")
+    }
+ 
     res.send(dataToSnakeCase(apiResponse({
       statusCode: 200,
       message: (User[0] == 0) ? "No Data Updated": "sucessful",
@@ -200,8 +211,11 @@ UserController.deleteById = async (req, res) => {
         id
       },
     });
-
-    Logger.create(logsConstant.user,`Delete userId ${id}`, req.user.user.id)
+    try {
+      Logger.create(logsConstant.user,`Delete userId ${id}`, req.user.user.id)
+    } catch (error) {
+      logger.info("error on create logs")
+    }
 
     res.send(dataToSnakeCase(apiResponse({
       statusCode: 200,
