@@ -73,7 +73,6 @@ const fetchWithHeaders2 = async (url, options = {}) => {
     } else {
       responseData.apiResponse = JSON.stringify(response.data);
     }
-    console.log("axios", responseData)
     return responseData;
   } catch (error) {
     return error;
@@ -320,7 +319,6 @@ DTCMService.refund = async (orderId, amount, seller, meansOfPayment = 'EXTERNAL'
     ]
   });
 
-  console.log(raw)
   const options = { method: 'POST', body: raw, redirect: 'follow' };
   return fetchWithHeaders(`orders/${orderId}/reverse`, options);
 }
