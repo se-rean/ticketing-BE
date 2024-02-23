@@ -10,19 +10,11 @@ LogsController.get = async (req, res) => {
   const { user } = req.user;
   try { 
     let query = { where: {}}
+    query.where.userId = user.id
 
-    const role = await UserModel.findAll({
-      where: {
-        id: user.id,
-        role: 'admin'
-      },
-        raw: true,
-        attributes: { exclude: ["password"] },
-    }); 
-    if (role.length == 0) {
-      query.where.userId = user.id
+    if (user.role == "admin") {
+      delete query.where.userId
     }
- 
 
     if (type) {
       query.where.type = type
@@ -37,6 +29,18 @@ LogsController.get = async (req, res) => {
         },
         { page: page || 1, page_size: page_size || 3000 }
       )
+    )
+
+    await Promise.all(
+      logs.rows.map(async (l, i) => {
+         logs.rows[i].userData = await UserModel.findOne({ 
+          where: { id: l.userId },  
+          attributes: { 
+            exclude: ["password"] 
+          }, 
+          raw: true 
+        })
+      })
     )
 
     res.send(dataToSnakeCase(apiResponse({
