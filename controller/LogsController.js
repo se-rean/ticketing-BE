@@ -18,13 +18,11 @@ LogsController.get = async (req, res) => {
       },
         raw: true,
         attributes: { exclude: ["password"] },
-    });
-    console.log(role.length)
+    }); 
     if (role.length == 0) {
       query.where.userId = user.id
     }
-
-    console.log(query)
+ 
 
     if (type) {
       query.where.type = type
