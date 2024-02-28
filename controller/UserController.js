@@ -218,8 +218,9 @@ UserController.deleteById = async (req, res) => {
         id
       },
     });
+
     try {
-      Logger.create(logsConstant.user,`Delete userId ${id}`, req.user.user.id)
+      Logger.create(logsConstant.user,`Delete user with username ${User[0].username}`, req.user.user.id)
     } catch (error) {
       logger.info("error on create logs")
     }
