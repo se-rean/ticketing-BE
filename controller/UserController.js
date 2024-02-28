@@ -82,7 +82,7 @@ UserController.create = async (req, res) => {
     });
 
     try {
-      Logger.create(logsConstant.user, `Create userId ${User.dataValues.id} details ${   regcode,
+      Logger.create(logsConstant.user, `Create user with username ${User.dataValues.username} details ${   regcode,
         fname,
         lname,
         mname,
@@ -90,7 +90,7 @@ UserController.create = async (req, res) => {
         phone,
         username }`, req.user.user.id)
     } catch (error) {
-      logger.info("error on create logs")
+      logger.info("error on create user logs")
     }
     
     
