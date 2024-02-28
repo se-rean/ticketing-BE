@@ -272,7 +272,7 @@ DTCMService.createCustomer = async (participantsIds = [], performanceCode = "", 
               await EventPricingModel.increment({sold: 1},{ where: { section: result[i].area, performanceCode } })
               await ParticipantsModel.update({ status: status, participantsCode: customer?.data?.id, basketId: basket?.data?.id, barcode: BC, orderId: order?.data?.orderId }, { where: { id: r.id } });
 
-              Logger.create(logsConstant.ticketing, `Create participant ${r.id} barcode ${ JSON.stringify(BC) }`, userId)
+              Logger.create(logsConstant.ticketing, `Create participant id:${r.id} fname: ${r.firstname} lname: ${r.lastname} barcode ${ JSON.stringify(BC) }`, userId)
 
             } else {
               log = JSON.parse(orderDetail.apiResponse)
