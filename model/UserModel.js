@@ -15,6 +15,7 @@ class UserModel extends Sequelize.Model {
         username: DataTypes.STRING(255),
         password: DataTypes.STRING(255),
         role: DataTypes.STRING(255),
+        status: DataTypes.STRING(255),
       },
       {
         modelName: "userModel",

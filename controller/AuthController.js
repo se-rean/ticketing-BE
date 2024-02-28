@@ -28,9 +28,7 @@ AuthController.login = async (req, res) => {
     const user = await UserModel.findOne({
         where: {
           username,
-          password: hashedPassword,
         },
-        attributes: { exclude: ["password"] },
       });
       
 
@@ -38,6 +36,10 @@ AuthController.login = async (req, res) => {
       logger.info(`Login failed for username: ${username}`);
       throw new Error("Invalid credentials");
     }
+
+    if(user.dataValues.password != hashedPassword) throw new Error("Invalid password")
+
+    if(user.dataValues.status != 'active') throw new Error("Account not Available")
 
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
