@@ -142,7 +142,7 @@ TicketingController.createRefund = async (req, res) => {
 }
 
 TicketingController.getEventDetails = async (req, res) => {
-  const performanceCode = req.query.PCODE
+  const performanceCode = req.params.PCODE
   
   try {
 
@@ -151,7 +151,6 @@ TicketingController.getEventDetails = async (req, res) => {
 
     const eventDetails = await DTCMService.getEventDetails(performanceCode)
     if (!eventDetails) throw new Error("Error encounter on get event details")
-    
 
     let ep = []
     if (eventDetails.data) {
