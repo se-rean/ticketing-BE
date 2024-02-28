@@ -201,9 +201,9 @@ TicketingController.getEventDetails = async (req, res) => {
 
        
     } else {
-      await EventModel.update({
-        status: eventStatus[4]
-      }, { where: { performanceCode } })
+      // await EventModel.update({
+      //   status: eventStatus[4]
+      // }, { where: { performanceCode } })
     }
  
     const eventDetail = await EventModel.findAll({ where: {performanceCode}, raw: true })
