@@ -24,7 +24,7 @@ LogsController.get = async (req, res) => {
       queryPaginate(
         {
           ...query,
-          order: [["type", "ASC"], ["createdAt", "DESC"]],
+          order: [["createdAt", "DESC"]],
           raw: true,
         },
         { page: page || 1, page_size: page_size || 3000 }
