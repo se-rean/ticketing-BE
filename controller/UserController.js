@@ -10,6 +10,7 @@ const { UserModel, sequelize } = require("../init/mysql-init");
 const logger = require("../api-helpers/logger");
 
 const UserController = {};
+// get all user account
 UserController.get = async (req, res) => {
   try {
     const User = await UserModel.findAll({
@@ -34,7 +35,7 @@ UserController.get = async (req, res) => {
     })));
   }
 }
-
+// create user account
 UserController.create = async (req, res) => {
   const {
     regcode,
@@ -109,7 +110,7 @@ UserController.create = async (req, res) => {
     })));
   }
 }
-
+// update user account
 UserController.update = async (req, res) => {
   const query = req.body
   const id = req.query.id
@@ -171,7 +172,7 @@ UserController.update = async (req, res) => {
     })));
   }
 }
-
+// get user account by id
 UserController.getById = async (req, res) => {
   const { id } = req.params
   try {
@@ -199,7 +200,7 @@ UserController.getById = async (req, res) => {
     })));
   }
 }
-
+// delete user by id
 UserController.deleteById = async (req, res) => {
   const { id } = req.params
   try {
