@@ -567,7 +567,7 @@ TicketingController.createRandomParticipants = async (req, res) => {
   })
 
   try {
-    Logger.create(logsConstant.participants,`Create performanceCode ${performanceCode} random participant ${result.map(r => r.id) }`, req.user.user.id)
+    Logger.create(logsConstant.participants,`Create performanceCode ${performanceCode} random participant count:${result.length }`, req.user.user.id)
   } catch (error) {
     logger.info("error on create logs")
   }
