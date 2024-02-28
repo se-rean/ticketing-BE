@@ -422,7 +422,7 @@ TicketingController.createParticipants = async (req, res) => {
     const result = await ParticipantsModel.bulkCreate(participants)
     
     try {
-      Logger.create(logsConstant.participants,`Create participants performanceCode ${participants[0].performance_code} Id's ${ result.map(p => p.dataValues.id ) }`, req.user.user.id)
+      Logger.create(logsConstant.participants,`Create participants performanceCode ${participants[0].performance_code} participants count: ${ result.length }`, req.user.user.id)
     } catch (error) {
       logger.info("error on create logs")
     } 
