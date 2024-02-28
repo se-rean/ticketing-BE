@@ -112,9 +112,9 @@ UserController.create = async (req, res) => {
 
 UserController.update = async (req, res) => {
   const query = req.body
+  const id = req.query.id
   const userData = req.user
-  try {
-  
+  try { 
     if(query?.username) {
       const UserExists = await UserModel.findAll({
         where: {
@@ -130,20 +130,27 @@ UserController.update = async (req, res) => {
       query.password = crypto.createHash('md5').update(query.password).digest('hex')
     }
     
-   
-    const User = await UserModel.update(query, { where: { id: userData.user.id } });
+    let where = {}
+    if (id) {
+      where.id = id
+    } else {
+      where.id = userData.user.id
+    }
+  
+    const User = await UserModel.update(query, { where });
 
     const UserExists = await UserModel.findAll({
-      where: {
-        id: userData.user.id
-      },
+      where
+      ,
         raw: true,
         // attributes: { exclude: ["password"] },
     });
 
     delete query?.password
+
+    console.log(UserExists)
     try {
-      Logger.create(logsConstant.user, `Update userId ${userData.user.id} details ${ JSON.stringify(query) }`, req.user.user.id)
+      Logger.create(logsConstant.user, `Update username ${UserExists[0].username} details ${ JSON.stringify(query) }`, req.user.user.id)
 
     } catch (error) {
       logger.info("error on create logs")
