@@ -124,11 +124,16 @@ UserController.update = async (req, res) => {
           raw: true,
           attributes: { exclude: ["password"] },
       });
-      if(UserExists.length) throw new Error('Please try different username')
+
+      if(UserExists.length && ![userData.user.id, Number(id)].includes(UserExists[0].id)) throw new Error('Please try different username')
     }
 
     if (query.password) {
       query.password = crypto.createHash('md5').update(query.password).digest('hex')
+    }
+
+    if (!query.password) {
+      delete query.password
     }
     
     let where = {}
@@ -148,8 +153,6 @@ UserController.update = async (req, res) => {
     });
 
     delete query?.password
-
-    console.log(UserExists)
     try {
       Logger.create(logsConstant.user, `Update username ${UserExists[0].username} details ${ JSON.stringify(query) }`, req.user.user.id)
 

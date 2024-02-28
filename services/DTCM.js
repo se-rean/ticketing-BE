@@ -205,7 +205,7 @@ async function craeteBasket(participant) {
   const options = { method: 'POST', body: raw, redirect: 'follow' };
   return fetchWithHeaders('baskets', options);
 }
-
+// create barcode
 DTCMService.createCustomer = async (participantsIds = [], performanceCode = "", limit=100, userId = "") => {
   try { 
     const result = await ParticipantsModel.findAll({
@@ -252,7 +252,7 @@ DTCMService.createCustomer = async (participantsIds = [], performanceCode = "", 
       if (customer.status === 200) {  
         result[i].participantsCode = customer?.data?.id
        
-        const basket = await craeteBasket(result[i]);
+        const basket = await craeteBasket(result[i]); //create basket
         if (basket.status === 200 ) {
           result[i].basketId = basket?.data?.id
           const orderPayload = {
@@ -261,9 +261,9 @@ DTCMService.createCustomer = async (participantsIds = [], performanceCode = "", 
             basket_id: basket?.data?.id
           }
            
-          const order = await purchaseBasket(orderPayload)
+          const order = await purchaseBasket(orderPayload) //purchase basket
           if (order.status === 200) {
-            const orderDetail = await orderDetails(order?.data?.orderId); 
+            const orderDetail = await orderDetails(order?.data?.orderId); //generate barcode
             if (orderDetail.status == 200) {
               log = { message: "OK" }
               status = "sold"
@@ -307,7 +307,7 @@ DTCMService.getPerformanceMap = async (performance) => {
   if (res.status !== 200) throw new Error(res.error.message)
   return res
 };
-
+// create refund
 DTCMService.refund = async (orderId, amount, seller, meansOfPayment = 'EXTERNAL') => {
   const raw = JSON.stringify({
     "Seller": seller,
@@ -320,7 +320,7 @@ DTCMService.refund = async (orderId, amount, seller, meansOfPayment = 'EXTERNAL'
   });
 
   const options = { method: 'POST', body: raw, redirect: 'follow' };
-  return fetchWithHeaders(`orders/${orderId}/reverse`, options);
+  return fetchWithHeaders(`orders/${orderId}/reverse`, options); //call dtcm api for refund
 }
 
 module.exports = DTCMService;

@@ -517,6 +517,7 @@ TicketingController.deleteParticipants = async (req, res) => {
   }
 }
 
+// for generating random participants
 TicketingController.createRandomParticipants = async (req, res) => {
   
   const performanceCode = req.params.PCODE
@@ -588,7 +589,7 @@ TicketingController.createRandomParticipants = async (req, res) => {
   })));
 }
 }
-
+// create barcode
 TicketingController.createBarcode = async (req, res) => {
   const { participantsIds, performanceCode, limit, retry = 1 } = req.body
 
