@@ -108,7 +108,7 @@ TicketingController.createRefund = async (req, res) => {
         await EventPricingModel.increment({refunded: 1},{ where: { section: p.area, performanceCode: p.performance_code } })
 
         try {
-          Logger.create(logsConstant.ticketing,`Refund PCODE ${PCODE} participant ${p.id} details orderId:${p.orderId} totalAmount:${p.totalAmount} client_id:${process.env.client_id}`, req.user.user.id)
+          Logger.create(logsConstant.ticketing,`Refund PCODE ${PCODE} participant barcode ${p.barcode} details orderId:${p.orderId} totalAmount:${p.totalAmount} client_id:${process.env.client_id}`, req.user.user.id)
         } catch (error) {
           logger.info("error on create logs")
         }
@@ -117,7 +117,7 @@ TicketingController.createRefund = async (req, res) => {
         let log = JSON.parse(refunded.apiResponse)
         ParticipantsModel.update({ generate_barcode_api_respose: 'Error on refund: '+log.message }, { where: {id: p.id} })
         try {
-          Logger.create(logsConstant.ticketing, `Error on Refund PCODE ${PCODE} participant ${p.id} details orderId:${p.orderId} totalAmount:${p.totalAmount} client_id:${process.env.client_id}`, req.user.user.id)
+          Logger.create(logsConstant.ticketing, `Error on Refund PCODE ${PCODE} participant barcode ${p.barcode} details orderId:${p.orderId} totalAmount:${p.totalAmount} client_id:${process.env.client_id}`, req.user.user.id)
         } catch (error) {
           logger.info("error on create logs")
         } 
