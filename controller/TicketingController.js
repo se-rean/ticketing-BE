@@ -167,7 +167,8 @@ TicketingController.getEventDetails = async (req, res) => {
       
       eventDetails.data.sections.forEach(s => {
         eventDetails.data.ticketPrices.forEach(async t => {
-          if (s.categoryId === t.categoryId && t.price !== 0) {
+          // if (s.categoryId === t.categoryId && t.price !== 0) {
+          if (s.categoryId === t.categoryId) {
             const pricing = await EventPricingModel.findAll({ where: { performanceCode, typeCode: t.typeCode  }, raw: true })
             if (pricing.length > 0) {
               await EventPricingModel.update({ 
