@@ -1,14 +1,31 @@
 
 
-const { TicketingModel, sequelize, EventModel } = require("../init/mysql-init");
+const { TicketingModel, sequelize, EventModel, EventPricingModel } = require("../init/mysql-init");
 const DTCMService = require("../services/DTCM");
+const logsConstant = require('../lib/logsConstant')
+const Logger = require('../lib/logger')
 const { apiResponse } = require("../api-helpers/ResponseController");
 const dataToSnakeCase = require("../api-helpers/data_to_snake_case");
 const ParticipantsModel = require("../model/ParticipantsModel");
 const queryPaginate = require("../api-helpers/query-paginate");
-const { faker } = require('@faker-js/faker');
+const { faker, fa } = require('@faker-js/faker');
+const { Sequelize, where } = require("sequelize");
+const logger = require("../api-helpers/logger");
 
 const TicketingController = {};
+const eventStatus = {
+  1: 'Pending For Barcode Generation',
+  2: 'Completed',
+  3: 'Cancelled',
+  4: 'Event Not Available'
+}
+
+const participantsStatus = {
+  1: 'pending',
+  2: 'refunded',
+  3: 'failed',
+  4: 'sold'
+}
 
 TicketingController.createEvent = async (req, res) => {
   
@@ -20,21 +37,98 @@ TicketingController.createEvent = async (req, res) => {
 
   try {
 
+    const eventDetails = await DTCMService.getEventDetails(performanceCode)
+    if (eventDetails.status !== 200) throw new Error("Event/Performance Code Not Available")
+    
     const eventExists = await EventModel.findAll({ where: {performanceCode}, raw: true })
     if(eventExists.length > 0) throw new Error("Event Already exists")
 
     const event = await EventModel.create({
       performanceCode,
       title,
-      description
+      description,
+      status: eventStatus[1]
     }, {raw: true})
 
     if (!event) throw new Error("Error encounter on create event")
     
+    try {
+      Logger.create(logsConstant.event,`Created Event performanceCode ${performanceCode}`, req.user.user.id)
+    } catch (error) {
+      logger.info("error on create logs")
+    }
+
     res.send(dataToSnakeCase(apiResponse({
       statusCode: 200,
       message: "sucessful",
       data: event.dataValues
+    })));
+
+  } catch (error) {
+    res.send(dataToSnakeCase(apiResponse({
+      statusCode: 200,
+      message: "error",
+      isSuccess: false,
+      errors: error.message
+    })));
+  }
+}
+
+TicketingController.createRefund = async (req, res) => {
+  const PCODE = req.query.PCODE
+  const { participants } = req.body
+  try {
+
+    if (!PCODE) throw new Error('Performance Code required')
+    if (!participants || participants.length < 1)  throw new Error('Participants id required')
+
+    const participantsData = await ParticipantsModel.findAll({ 
+      where: {
+        performance_code: PCODE, 
+        status: 'sold', 
+        [Sequelize.Op.not]: [
+          {barcode: null},
+          {barcode: ""},
+        ],
+        [Sequelize.Op.not]: [
+          {orderId: null},
+          {orderId: ""},
+        ],
+        id: { 
+          [Sequelize.Op.in]: 
+          participants
+        }
+      }, raw: true })
+    if(participantsData.length < 1) throw new Error("Participant/s not Available for refund")
+    const result = await Promise.all(participantsData.map(async p => {
+      const refunded = await DTCMService.refund(p.orderId, p.totalAmount, process.env.client_id)
+      if (refunded.status === 204) {
+        ParticipantsModel.update({ status: 'refunded', generate_barcode_api_respose: 'refund successful' }, { where: {id: p.id} })
+        await EventPricingModel.decrement({sold: 1},{ where: { section: p.area, performanceCode: p.performance_code } })
+        await EventPricingModel.increment({refunded: 1},{ where: { section: p.area, performanceCode: p.performance_code } })
+
+        try {
+          Logger.create(logsConstant.ticketing,`Refund PCODE ${PCODE} participant barcode ${p.barcode} details orderId:${p.orderId} totalAmount:${p.totalAmount} client_id:${process.env.client_id}`, req.user.user.id)
+        } catch (error) {
+          logger.info("error on create logs")
+        }
+
+      } else {
+        let log = JSON.parse(refunded.apiResponse)
+        ParticipantsModel.update({ generate_barcode_api_respose: 'Error on refund: '+log.message }, { where: {id: p.id} })
+        try {
+          Logger.create(logsConstant.ticketing, `Error on Refund PCODE ${PCODE} participant barcode ${p.barcode} details orderId:${p.orderId} totalAmount:${p.totalAmount} client_id:${process.env.client_id}`, req.user.user.id)
+        } catch (error) {
+          logger.info("error on create logs")
+        } 
+      }
+    }))
+    
+
+    res.send(dataToSnakeCase(apiResponse({
+      statusCode: 200,
+      message: "sucessful",
+      data: participantsData
     })));
 
   } catch (error) {
@@ -56,6 +150,121 @@ TicketingController.getEventDetails = async (req, res) => {
     if(eventExists.length < 1) throw new Error("Event Not exists")
 
     const eventDetails = await DTCMService.getEventDetails(performanceCode)
+    if (!eventDetails) throw new Error("Error encounter on get event details")
+
+    let ep = []
+    if (eventDetails.data) {
+      await EventModel.update({
+        name,
+        startDate,
+        endDate,
+        webSaleStartDate,
+        webSaleEndDate,
+        showCode,
+        venueCode, 
+      } = eventDetails.data, { where: { performanceCode } })
+
+      
+      eventDetails.data.sections.forEach(s => {
+        eventDetails.data.ticketPrices.forEach(async t => {
+          // if (s.categoryId === t.categoryId && t.price !== 0) {
+          if (s.categoryId === t.categoryId) {
+            const pricing = await EventPricingModel.findAll({ where: { performanceCode, typeCode: t.typeCode  }, raw: true })
+            if (pricing.length > 0) {
+              await EventPricingModel.update({ 
+                section: s.code,
+                capacity: s.capacity,
+                typeCode: t.typeCode,
+                amount: t.price,
+                state: eventDetails.data.priceTypes.find(p => p.code === t.typeCode).state
+               }, { where:  { performanceCode, typeCode: t.typeCode, section: s.code  } })
+            } else {
+              await EventPricingModel.create({ 
+                  performanceCode,
+                  section: s.code,
+                  capacity: s.capacity,
+                  typeCode: t.typeCode,
+                  amount: t.price,
+                  state: eventDetails.data.priceTypes.find(p => p.code === t.typeCode).state
+               })
+            }
+            // ep.push({
+            //   performanceCode,
+            //   section: s.code,
+            //   capacity: s.capacity,
+            //   typeCode: t.typeCode,
+            //   amount: t.price,
+            //   state: eventDetails.data.priceTypes.find(p => p.code === t.typeCode).state
+            //   })
+          } 
+        })
+        })
+
+       
+    } else {
+      // await EventModel.update({
+      //   status: eventStatus[4]
+      // }, { where: { performanceCode } })
+    }
+ 
+    const eventDetail = await EventModel.findAll({ where: {performanceCode}, raw: true })
+    const eventPricing = await EventPricingModel.findAll({ where: { performanceCode }, raw: true })
+
+    res.send(dataToSnakeCase(apiResponse({
+      statusCode: 200,
+      message: "sucessful",
+      data: { ...eventDetail[0], eventPricing }
+    })));
+
+  } catch (error) {
+    res.send(dataToSnakeCase(apiResponse({
+      statusCode: 200,
+      message: "error",
+      isSuccess: false,
+      errors: error.message
+    })));
+  }
+}
+
+TicketingController.getAllEvent = async (req, res) => {
+
+  try {
+
+    const events = await EventModel.findAll({raw: true })
+    if(events.length < 1) throw new Error("Event Not exists")
+
+    await Promise.all(
+      events.map(async (e, index) => {
+        const count = await ParticipantsModel.count({ where: { performance_code: e.performanceCode } })
+        events[index] = { ...e, count  }
+      })
+    )
+
+    res.send(dataToSnakeCase(apiResponse({
+      statusCode: 200,
+      message: "sucessful",
+      data:  events 
+    })));
+
+  } catch (error) {
+    res.send(dataToSnakeCase(apiResponse({
+      statusCode: 200,
+      message: "error",
+      isSuccess: false,
+      errors: error.message
+    })));
+  }
+}
+
+TicketingController.getEventDetails1 = async (req, res) => {
+  const performanceCode = req.params.PCODE
+  
+  try {
+
+    const eventExists = await EventModel.findAll({ where: {performanceCode}, raw: true })
+    if(eventExists.length < 1) throw new Error("Event Not exists")
+
+    const eventDetails = await DTCMService.getEventDetails(performanceCode)
  
     if (!eventDetails) throw new Error("Error encounter on create event")
     
@@ -63,6 +272,47 @@ TicketingController.getEventDetails = async (req, res) => {
       statusCode: 200,
       message: "sucessful",
       data: eventDetails.data
+    })));
+
+  } catch (error) {
+    res.send(dataToSnakeCase(apiResponse({
+      statusCode: 200,
+      message: "error",
+      isSuccess: false,
+      errors: error.message
+    })));
+  }
+}
+
+TicketingController.updateEventDetails = async (req, res) => {
+  const PCODE = req.query.PCODE
+  const { title, status, description } = req.body
+  try { 
+
+    if (!PCODE) throw new Error('Performance Code required')
+
+    const eventExists = await EventModel.findAll({ where: {performanceCode: PCODE}, raw: true })
+    if(eventExists.length < 1) throw new Error("Event Not exists")
+
+    await EventModel.update({
+      title,
+      status: eventStatus[status],
+      description
+    }, { where: {performanceCode: PCODE} })
+
+    const eventData = await EventModel.findAll({ where: {performanceCode: PCODE}, raw: true })
+
+    try {
+      Logger.create(logsConstant.event,`Update Event performanceCode ${PCODE} details ${JSON.stringify( { title, status, description } )}`, req.user.user.id)
+    } catch (error) {
+      logger.info("error on create logs")
+    } 
+    
+
+    res.send(dataToSnakeCase(apiResponse({
+      statusCode: 200,
+      message: "sucessful",
+      data: eventData
     })));
 
   } catch (error) {
@@ -105,26 +355,54 @@ TicketingController.getParticipants = async (req, res) => {
 
   const performanceCode = req.params.PCODE
 
-  const { page, page_size } = req.query;
+  const { page, page_size, status } = req.query;
 
   try {
-    
+    const allParticipants = await ParticipantsModel.findAll({where: { performance_code: performanceCode }})
+    const failedParticipants = allParticipants.filter(p => p.status === 'failed');
+    const soldParticipants = allParticipants.filter(p => p.status === 'sold');
+    const refundedParticipants = allParticipants.filter(p => p.status === 'refunded');
+    const pendingParticipants = allParticipants.filter(p => p.status === 'pending');
+    const query = {  performance_code: performanceCode }
+
+    if (participantsStatus[status]) {
+      query.status = participantsStatus[status]
+    }
+
     const participants = await ParticipantsModel.findAll(
       queryPaginate(
         {
-          where: { performance_code: performanceCode },
-          order: [["barcode", "ASC"]],
+          where: query,
+          order: [["status", "ASC"], ["createdAt", "DESC"]],
           raw: true,
         },
-        { page: page || 1, page_size: page_size || 10 }
+        { page: page || 1, page_size: page_size || 3000 }
       )
     )
     if (!participants) throw new Error("Error: "+ JSON.stringify(result))
 
+    let count = allParticipants.length;
+    if (participantsStatus[status]) {
+      let counter = {
+        failed: failedParticipants.length,
+        pending: pendingParticipants.length,
+        sold: soldParticipants.length,
+        refunded: refundedParticipants.length,
+      }
+
+      count = counter[participantsStatus[status]]
+    }
+
     res.send(dataToSnakeCase(apiResponse({
       statusCode: 200,
       message: "sucessful",
-      data: participants
+      count: count,
+      failed: failedParticipants.length,
+      pending: pendingParticipants.length,
+      sold: soldParticipants.length,
+      refunded: refundedParticipants.length,
+      pages: (allParticipants.length / page_size),
+      data: participants,
     })));
 
   } catch (error) {
@@ -144,6 +422,12 @@ TicketingController.createParticipants = async (req, res) => {
  
     const result = await ParticipantsModel.bulkCreate(participants)
     
+    try {
+      Logger.create(logsConstant.participants,`Create participants performanceCode ${participants[0].performance_code} participants count: ${ result.length }`, req.user.user.id)
+    } catch (error) {
+      logger.info("error on create logs")
+    } 
+
     res.send(dataToSnakeCase(apiResponse({
       statusCode: 200,
       message: "sucessful",
@@ -160,6 +444,81 @@ TicketingController.createParticipants = async (req, res) => {
   }
 }
 
+TicketingController.editParticipants = async (req, res) => {
+  const query = req.body
+  const { id } = req.query
+  try {
+ 
+    const result = await ParticipantsModel.update(query, {
+      where: {
+        id,
+        barcode: null
+      },
+      raw: true
+    })
+    
+    try {
+      Logger.create(logsConstant.participants,`Update participants ${id} details ${ JSON.stringify(query) }`, req.user.user.id)
+    } catch (error) {
+      logger.info("error on create logs")
+    }    
+
+    res.send(dataToSnakeCase(apiResponse({
+      statusCode: 200,
+      message: "sucessful",
+      data: {
+        updated: result
+      }
+    })));
+
+  } catch (error) {
+    res.send(dataToSnakeCase(apiResponse({
+      statusCode: 402,
+      message: "error",
+      isSuccess: false,
+      errors: error.message
+    })));
+  }
+}
+
+TicketingController.deleteParticipants = async (req, res) => {
+  const query = req.body
+  const { id } = req.query
+
+  try {
+ 
+    const result = await ParticipantsModel.destroy({
+      where: {
+        id,
+        barcode: null
+      }
+    })
+
+    try {
+      Logger.create(logsConstant.participants, `Delete participants ${id} details ${ JSON.stringify(query) }`, req.user.user.id)
+    } catch (error) {
+      logger.info("error on create logs")
+    }
+
+    res.send(dataToSnakeCase(apiResponse({
+      statusCode: 200,
+      message: "sucessful",
+      data: {
+        deleted: result
+      }
+    })));
+
+  } catch (error) {
+    res.send(dataToSnakeCase(apiResponse({
+      statusCode: 402,
+      message: "error",
+      isSuccess: false,
+      errors: error.message
+    })));
+  }
+}
+
+// for generating random participants
 TicketingController.createRandomParticipants = async (req, res) => {
   
   const performanceCode = req.params.PCODE
@@ -170,34 +529,38 @@ TicketingController.createRandomParticipants = async (req, res) => {
   if(eventExists.length < 1) throw new Error("Event Not exists")
 
   let data = []
-  const payload = category.map(c => {
-    console.log(c.count)
+  const payload = await Promise.all(category.map(c => {
    
+    const countryCode = faker.location.countryCode()
     for(let x = 0; x < c.count; x++) {
       data.push({
-        "performance_code": performanceCode,
-        "area": c.area,
-        "pricetype_code": c.code,
-        "quantity": "1",
-        "firstname": faker.person.firstName(),
-        "lastname": faker.person.lastName(),
-        "nationality": "filipino",
-        "email": faker.internet.email(),
-        "dateofbirth": faker.date.birthdate(),
-        "internationalcode": "PH",
-        "areacode": "AE",
-        "phonenumber": faker.phone.number(),
-        "address_line_1": faker.location.streetAddress({useFullAddress: true}),
-        "city": faker.location.city(),
-        "state": faker.location.state(),
-        "countrycode": faker.location.countryCode(),
-        "totalAmount": c.amount
-    })
-    } 
-
-  
+          "performance_code": performanceCode,
+          "area": c.area,
+          "pricetype_code": c.code,
+          "quantity": "1",
+          "firstname": faker.person.firstName(),
+          "lastname": faker.person.lastName(),
+          "nationality": faker.location.countryCode(),
+          "email": faker.internet.email(),
+          "dateofbirth": faker.date.birthdate(),
+          "internationalcode": countryCode,
+          "areacode": countryCode,
+          "phonenumber": faker.phone.number(),
+          "address_line_1": faker.location.streetAddress({useFullAddress: false}),
+          "city": faker.location.city(),
+          "state": faker.location.state(),
+          "countrycode": countryCode,
+          "totalAmount": c.amount,
+          "salutation": faker.person.prefix(),
+          "offerCode": "",
+          "qualifierCode": "",
+          "job_title": faker.person.jobTitle(),
+          "company_name": faker.company.name(),
+          "type":faker.person.jobType()
+      })
+    }
     return data
-  })
+  }))
 
   const result = await ParticipantsModel.bulkCreate(data)
 
@@ -205,6 +568,13 @@ TicketingController.createRandomParticipants = async (req, res) => {
     result[i] = r.dataValues
   })
 
+  try {
+    Logger.create(logsConstant.participants,`Create performanceCode ${performanceCode} random participant count:${result.length }`, req.user.user.id)
+  } catch (error) {
+    logger.info("error on create logs")
+  }
+  
+  
   res.send(dataToSnakeCase(apiResponse({
     statusCode: 200,
     message: "sucessful",
@@ -220,14 +590,14 @@ TicketingController.createRandomParticipants = async (req, res) => {
   })));
 }
 }
-
+// create barcode
 TicketingController.createBarcode = async (req, res) => {
   const { participantsIds, performanceCode, limit, retry = 1 } = req.body
 
   try {
     let createCustomer = {}
     for(let x = 0; x < retry; x++) {
-      createCustomer = await DTCMService.createCustomer(participantsIds, performanceCode, limit);
+      createCustomer = await DTCMService.createCustomer(participantsIds, performanceCode, limit, req.user.user.id);
     }
    
     res.send(dataToSnakeCase(apiResponse({

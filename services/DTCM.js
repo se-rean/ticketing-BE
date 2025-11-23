@@ -1,25 +1,27 @@
 const DTCMService = {};
-const { ParticipantsModel, sequelize } = require('../init/mysql-init');
+const { ParticipantsModel, sequelize, EventPricingModel } = require('../init/mysql-init');
 const { getToken } = require('../init/DTCMAccessToken');
-const logger = require('../api-helpers/logger');
 const { Sequelize } = require('sequelize');
+const axios = require('axios');
+const Logger = require('../lib/logger')
+const logsConstant = require('../lib/logsConstant')
+const request = require('request');
 
-const API_URL = 'https://et-apiuat.detsandbox.com';
-const API_KEY = '3rcbhsn32xmwvu42bmk2pkak';
+const API_URL = process.env.ENV == "development" ? process.env.DEV_API_URL : process.env.PROD_API_URL;
+const API_KEY = process.env.ENV == "development" ? process.env.DEV_API_KEY : process.env.PROD_API_KEY;
 
-const createHeaders = async () => {
+const createHeaders1 = async () => {
   const headers = new Headers();
   headers.append('Authorization', `Bearer ${await getToken()}`);
   headers.append('Content-Type', 'application/json');
   return headers;
 };
 
-const fetchWithHeaders = async (url, options = {}) => {
+const fetchWithHeaders1 = async (url, options = {}) => {
   const headers = await createHeaders();
   options.headers = headers;
   try {
     const response = await fetch(`${API_URL}/${url}?api_key=${API_KEY}`, options);
-
     const responseData = {
       status: response.status,
       ok: response.ok,
@@ -27,21 +29,101 @@ const fetchWithHeaders = async (url, options = {}) => {
     };
 
     if (response.ok) {
-      responseData.data = await response.json();
+      if(response.status !== 204) {
+        responseData.data = await response.json();
+      }
     } else {
       responseData.apiResponse = JSON.stringify(await response.json());
     }
 
     return responseData;
   } catch (error) {
-    logger.info(error)
     return error
   }
 };
 
+const createHeaders2 = async () => {
+  const headers = {
+    'Authorization': `Bearer ${await getToken()}`,
+    'Content-Type': 'application/json'
+  };
+  return headers;
+};
+
+const fetchWithHeaders2 = async (url, options = {}) => {
+  const headers = await createHeaders();
+  try {
+    const response = await axios(`${API_URL}/${url}?api_key=${API_KEY}`, {
+      ...options,
+      headers: headers
+    });
+
+    
+
+    const responseData = {
+      status: response.status,
+      ok: response.status >= 200 && response.status < 300,
+      // apiResponse: JSON.stringify(response.data)
+    };
+
+    if (response.status >= 200 && response.status < 300) {
+      if (response.status !== 204) {
+        responseData.data = response.data;
+      }
+    } else {
+      responseData.apiResponse = JSON.stringify(response.data);
+    }
+    return responseData;
+  } catch (error) {
+    return error;
+  }
+};
+
+const createHeaders = async () => {
+  const headers = {
+    'Authorization': `Bearer ${await getToken()}`,
+    'Content-Type': 'application/json'
+  };
+  return headers;
+};
+
+const fetchWithHeaders = async (url, options = {}) => {
+  const headers = await createHeaders();
+  const requestOptions = {
+    url: `${API_URL}/${url}?api_key=${API_KEY}`,
+    headers: headers,
+    ...options
+  };
+
+  const apiResult = await new Promise((resolve, reject) => {
+    request(requestOptions, (error, response, body) => {
+      if (error) {
+        reject(error);
+      } else {
+        const responseData = {
+          status: response.statusCode,
+          ok: response.statusCode >= 200 && response.statusCode < 300,
+          // apiResponse: JSON.stringify(body)
+        };
+
+        if (response.statusCode >= 200 && response.statusCode < 300) {
+          if (response.statusCode !== 204) {
+            responseData.data = JSON.parse(body);
+          }
+        } else {
+          responseData.apiResponse = JSON.stringify(body);
+        }
+
+        resolve(responseData);
+      }
+    });
+  });
+
+  return apiResult
+};
+
 DTCMService.getEventDetails = async (performanceCode) => {
   const res = await fetchWithHeaders(`performances/${performanceCode}/map`);
-  if (res.status !== 200) throw new Error(res.error.message)
   return res
 }
 
@@ -73,7 +155,7 @@ async function orderDetails(orderId) {
 
 async function purchaseBasket(participant) {
   const raw = JSON.stringify({
-    Seller: 'ASAEV1',
+    Seller: process.env.client_id,
     customer: [{ ID: participant.participants_code, Account: 0, AFile: 'tel' }],
     Payments: [{ Amount: participant.totalAmount, MeansOfPayment: 'EXTERNAL' }],
   });
@@ -88,7 +170,7 @@ async function customerApi(customer) {
     lastName: customer.lastname,
     email: customer.email,
     dateOfBirth: customer.dateofbirth,
-    nationality: customer.internationalcode,
+    nationality: customer.nationality,
     phoneNumber: customer.phonenumber,
     areaCode: customer.areacode,
     city: customer.city,
@@ -102,7 +184,7 @@ async function customerApi(customer) {
 async function craeteBasket(participant) {
   const raw = JSON.stringify({
     "Channel": "5",
-    "Seller": "ABART11",
+    "Seller": process.env.client_id,
     "Performancecode": participant.performance_code,
     "Area": participant.area,
     "autoReduce": false,
@@ -123,10 +205,9 @@ async function craeteBasket(participant) {
   const options = { method: 'POST', body: raw, redirect: 'follow' };
   return fetchWithHeaders('baskets', options);
 }
-
-DTCMService.createCustomer = async (participantsIds = [], performanceCode = "", limit=100) => {
-  try {
-    console.log(performanceCode)
+// create barcode
+DTCMService.createCustomer = async (participantsIds = [], performanceCode = "", limit=100, userId = "") => {
+  try { 
     const result = await ParticipantsModel.findAll({
       where: {
         [Sequelize.Op.and]: [
@@ -143,44 +224,76 @@ DTCMService.createCustomer = async (participantsIds = [], performanceCode = "", 
             ],
           },
           {
-            barcode: null,
+            [Sequelize.Op.or]: [
+              {barcode: null},
+              {barcode: ""},
+            ]
           },
+          {
+            [Sequelize.Op.or]: [
+              {status: null},
+              {status: "pending"},
+              {status: "failed"},
+            ]
+          }
         ],
       },
       raw: true,
       limit: limit,
     });
-    console.log(result)
-    if (result.length < 1) throw new Error("All Participant already have barcode")
+    if (result.length < 1) return "All Participant already have barcode"
     // const data = []
+
+    
+
     const data = await Promise.all(result.map(async (r, i) => {
-      // result[i] = result[i];
-      console.log("rbaster", r.basketId) 
-       
+      let log, status = "failed"
       const customer = await customerApi(r);
-      console.log("customer",customer)
-      result[i].participantsCode = customer?.data?.id
-    
-      const basket = await craeteBasket(result[i]);
-        console.log("basket",basket)
-        result[i].basketId = basket?.data?.id
-    
-     
-      
-      const orderPayload = {
-        participants_code: customer?.data?.id,
-        totalAmount: r.totalAmount,
-        basket_id: basket?.data?.id
+      if (customer.status === 200) {  
+        result[i].participantsCode = customer?.data?.id
+       
+        const basket = await craeteBasket(result[i]); //create basket
+        if (basket.status === 200 ) {
+          result[i].basketId = basket?.data?.id
+          const orderPayload = {
+            participants_code: customer?.data?.id,
+            totalAmount: r.totalAmount,
+            basket_id: basket?.data?.id
+          }
+           
+          const order = await purchaseBasket(orderPayload) //purchase basket
+          if (order.status === 200) {
+            const orderDetail = await orderDetails(order?.data?.orderId); //generate barcode
+            if (orderDetail.status == 200) {
+              log = { message: "OK" }
+              status = "sold"
+              const BC = orderDetail?.data?.orderLines[0]?.orderLineItems[0]?.barcode;
+              result[i].barcode = BC
+              await EventPricingModel.increment({sold: 1},{ where: { section: result[i].area, performanceCode } })
+              await ParticipantsModel.update({ status: status, participantsCode: customer?.data?.id, basketId: basket?.data?.id, barcode: BC, orderId: order?.data?.orderId }, { where: { id: r.id } });
+
+              Logger.create(logsConstant.ticketing, `Create participant id:${r.id} fname: ${r.firstname} lname: ${r.lastname} barcode ${ JSON.stringify(BC) }`, userId)
+
+            } else {
+              log = JSON.parse(orderDetail.apiResponse)
+            }
+          } else {
+            log = JSON.parse(order.apiResponse)
+          }
+        } else {
+          log = JSON.parse(basket.apiResponse)
+        }
+      } else {
+        log = JSON.parse(customer.apiResponse)
       }
-      
-      const order = await purchaseBasket(orderPayload)
-      const orderDetail = await orderDetails(order?.data?.orderId); 
-      console.log("order", order)
-      console.log("orderDetail", orderDetail)
-      const BC = orderDetail?.data?.orderLines[0]?.orderLineItems[0]?.barcode;
-      result[i].barcode = BC
-      await ParticipantsModel.update({ participantsCode: customer?.data?.id, basketId: basket?.data?.id, barcode: BC, generate_barcode_api_respose:  "CREATE CUSTOMER: "+ JSON.stringify(customer)+ " | CREATE BASKET:"+ JSON.stringify(basket) + " | ORDER BASKET: " + JSON.stringify(order) + " | GET ORDER DETAILS: " + JSON.stringify(orderDetail) }, { where: { id: r.id } });
+
+      if (typeof log == 'string') {
+        log = JSON.parse(log)
+      }
+
+      await ParticipantsModel.update({ status , generate_barcode_api_respose: log.message}, { where: { id: r.id } });
       return result[i]
+      
     }));
 
     return data
@@ -194,5 +307,20 @@ DTCMService.getPerformanceMap = async (performance) => {
   if (res.status !== 200) throw new Error(res.error.message)
   return res
 };
+// create refund
+DTCMService.refund = async (orderId, amount, seller, meansOfPayment = 'EXTERNAL') => {
+  const raw = JSON.stringify({
+    "Seller": seller,
+    "refunds": [
+      {
+          "Amount": amount,
+          "MeansOfPayment": meansOfPayment
+      }
+    ]
+  });
+
+  const options = { method: 'POST', body: raw, redirect: 'follow' };
+  return fetchWithHeaders(`orders/${orderId}/reverse`, options); //call dtcm api for refund
+}
 
 module.exports = DTCMService;

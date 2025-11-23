@@ -1,10 +1,12 @@
 const { apiResponse } = require("../api-helpers/ResponseController");
 const logger = require("../api-helpers/logger");
 const dataToSnakeCase = require("../api-helpers/data_to_snake_case");
-const AuthController = {};
+const AuthController = {}; 
+const logsConstant = require('../lib/logsConstant')
 const { UserModel } = require("../init/mysql-init");
 const jwt = require("jsonwebtoken");
 const crypto = require('crypto');
+const Logger = require("../lib/logger");
 
 const generateAccessToken = (user) => {
   return jwt.sign({ user }, process.env.ACCESS_SECRET, {
@@ -23,13 +25,10 @@ AuthController.login = async (req, res) => {
   try {
 
     const hashedPassword = crypto.createHash('md5').update(password).digest('hex');
-    console.log(hashedPassword)
     const user = await UserModel.findOne({
         where: {
           username,
-          password: hashedPassword,
         },
-        attributes: { exclude: ["password"] },
       });
       
 
@@ -38,12 +37,21 @@ AuthController.login = async (req, res) => {
       throw new Error("Invalid credentials");
     }
 
+    if(user.dataValues.password != hashedPassword) throw new Error("Invalid password")
+
+    if(user.dataValues.status != 'active') throw new Error("Account not Available")
+
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
 
     const token = { accessToken, refreshToken }; // Add expiresIn property
 
     logger.info(`User ${username} logged in successfully`);
+    try {
+      Logger.create(logsConstant.user, `Login user ${username}`, user.id)
+    } catch (error) {
+      logger.info('error on create logs')
+    }
     
     res.send(
       dataToSnakeCase(

@@ -23,13 +23,22 @@ class ParticipantsModel extends Sequelize.Model {
         state: DataTypes.STRING(255),
         countrycode: DataTypes.STRING(255),
         barcode: DataTypes.STRING(255),
-        status: DataTypes.STRING(255),
+        status: {
+          type: DataTypes.STRING(255),
+          defaultValue: 'pending'
+        },
         participantsCode: DataTypes.STRING(255),
         basketId: DataTypes.STRING(255),
         generate_barcode_api_respose: DataTypes.TEXT,
         amount: DataTypes.STRING(500),
         orderId: DataTypes.STRING(255),
         totalAmount: DataTypes.STRING(255),
+        salutation: DataTypes.STRING(500),
+        offerCode: DataTypes.STRING(255),
+        qualifierCode: DataTypes.STRING(500),
+        job_title: DataTypes.STRING(255),
+        company_name: DataTypes.STRING(255),
+        type: DataTypes.STRING(255),
       },
       {
         modelName: "participants",

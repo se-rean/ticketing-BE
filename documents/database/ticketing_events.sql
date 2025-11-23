@@ -27,10 +27,18 @@ CREATE TABLE `events` (
   `performanceCode` varchar(45) DEFAULT NULL,
   `title` varchar(45) DEFAULT NULL,
   `description` text,
+  `status` varchar(45) DEFAULT NULL,
+  `name` varchar(45) DEFAULT NULL,
+  `startDate` varchar(45) DEFAULT NULL,
+  `endDate` varchar(45) DEFAULT NULL,
+  `webSaleStartDate` varchar(45) DEFAULT NULL,
+  `showCode` varchar(45) DEFAULT NULL,
+  `webSaleEndDate` varchar(45) DEFAULT NULL,
+  `venueCode` text,
   `createdAt` timestamp NULL DEFAULT NULL,
   `updatedAt` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=83 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -39,7 +47,7 @@ CREATE TABLE `events` (
 
 LOCK TABLES `events` WRITE;
 /*!40000 ALTER TABLE `events` DISABLE KEYS */;
-INSERT INTO `events` VALUES (1,NULL,NULL,NULL,'2024-01-22 03:20:39','2024-01-22 03:20:39'),(2,NULL,'title','desc','2024-01-22 03:21:42','2024-01-22 03:21:42'),(3,'1231asd','title','desc','2024-01-22 04:23:28','2024-01-22 04:23:28'),(4,'1231asd','title','desc','2024-01-22 04:27:32','2024-01-22 04:27:32'),(5,'1231asd','title','desc','2024-01-22 04:30:36','2024-01-22 04:30:36'),(6,'1231asd','title','desc','2024-01-22 04:30:57','2024-01-22 04:30:57'),(7,'1231asd','title','desc','2024-01-22 04:31:17','2024-01-22 04:31:17'),(8,'1231asd','title','desc','2024-01-22 04:32:33','2024-01-22 04:32:33'),(9,'12311asd','title','desc','2024-01-22 04:32:43','2024-01-22 04:32:43'),(10,'12311asd','title','desc','2024-01-22 04:32:48','2024-01-22 04:32:48'),(11,'P)TASDAS','title','desc','2024-01-22 06:02:36','2024-01-22 06:02:36'),(12,'PDUB01DEC2023B','title','desc','2024-01-22 06:19:55','2024-01-22 06:19:55');
+INSERT INTO `events` VALUES (81,'PDUB01DEC2023B1','PDUB01DEC2023B','PDUB01DEC2023B\n','Cancelled','Batch 3 API upgrade','2023-12-01T19:30:00','2028-12-01T23:00:00','2023-12-01T19:30:00','SBAT23C','2028-12-01T23:00:00','DUBAI WORLD TRADE CENTRE L.L.C[DED-229599],DUBAI WORLD TRADE CENTRE L.L.C[DED-229599]','2024-02-28 02:28:31','2024-02-28 03:47:13'),(82,'PDUB01DEC2023B','PDUB01DEC2023B ','PDUB01DEC2023B ','Pending For Barcode Generation','Batch 3 API upgrade','2023-12-01T19:30:00','2028-12-01T23:00:00','2023-12-01T19:30:00','SBAT23C','2028-12-01T23:00:00','DUBAI WORLD TRADE CENTRE L.L.C[DED-229599],DUBAI WORLD TRADE CENTRE L.L.C[DED-229599]','2024-02-28 03:47:33','2024-02-28 17:01:54');
 /*!40000 ALTER TABLE `events` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -52,4 +60,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-01-22 22:29:00
+-- Dump completed on 2024-03-01 13:32:01
